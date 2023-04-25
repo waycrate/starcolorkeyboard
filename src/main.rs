@@ -4,8 +4,10 @@ use wayland_client::{
         wl_buffer, wl_compositor, wl_keyboard, wl_registry, wl_seat, wl_shm, wl_shm_pool,
         wl_surface,
     },
-    Connection, Dispatch, QueueHandle, WEnum,
+    Connection, Dispatch, Proxy, QueueHandle, WEnum,
 };
+
+//use wayland_protocols_wlr::layer_shell::v1::client::{zwlr_layer_shell_v1, zwlr_layer_surface_v1};
 
 use wayland_protocols::xdg::shell::client::{xdg_surface, xdg_toplevel, xdg_wm_base};
 
@@ -52,56 +54,56 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
         _: &Connection,
         qh: &QueueHandle<Self>,
     ) {
-        if let wl_registry::Event::Global { name, interface, .. } = event {
-            match interface.as_str() {
-                "wl_compositor" => {
-                    let compositor =
-                        registry.bind::<wl_compositor::WlCompositor, _, _>(name, 1, qh, ());
-                    let surface = compositor.create_surface(qh, ());
-                    state.base_surface = Some(surface);
+        if let wl_registry::Event::Global {
+            name,
+            interface,
+            version,
+        } = event
+        {
+            //if interface == zwlr_layer_surface_v1::ZwlrLayerSurfaceV1::interface().name {
+            //} else
+            if interface == wl_compositor::WlCompositor::interface().name {
+                let compositor =
+                    registry.bind::<wl_compositor::WlCompositor, _, _>(name, version, qh, ());
+                let surface = compositor.create_surface(qh, ());
+                state.base_surface = Some(surface);
 
-                    if state.wm_base.is_some() && state.xdg_surface.is_none() {
-                        state.init_xdg_surface(qh);
-                    }
+                if state.wm_base.is_some() && state.xdg_surface.is_none() {
+                    state.init_xdg_surface(qh);
                 }
-                "wl_shm" => {
-                    let shm = registry.bind::<wl_shm::WlShm, _, _>(name, 1, qh, ());
+            } else if interface == wl_shm::WlShm::interface().name {
+                let shm = registry.bind::<wl_shm::WlShm, _, _>(name, version, qh, ());
 
-                    let (init_w, init_h) = (320, 240);
+                let (init_w, init_h) = (320, 240);
 
-                    let mut file = tempfile::tempfile().unwrap();
-                    draw(&mut file, (init_w, init_h));
-                    let pool =
-                        shm.create_pool(file.as_raw_fd(), (init_w * init_h * 4) as i32, qh, ());
-                    let buffer = pool.create_buffer(
-                        0,
-                        init_w as i32,
-                        init_h as i32,
-                        (init_w * 4) as i32,
-                        wl_shm::Format::Argb8888,
-                        qh,
-                        (),
-                    );
-                    state.buffer = Some(buffer.clone());
+                let mut file = tempfile::tempfile().unwrap();
+                draw(&mut file, (init_w, init_h));
+                let pool = shm.create_pool(file.as_raw_fd(), (init_w * init_h * 4) as i32, qh, ());
+                let buffer = pool.create_buffer(
+                    0,
+                    init_w as i32,
+                    init_h as i32,
+                    (init_w * 4) as i32,
+                    wl_shm::Format::Argb8888,
+                    qh,
+                    (),
+                );
+                state.buffer = Some(buffer.clone());
 
-                    if state.configured {
-                        let surface = state.base_surface.as_ref().unwrap();
-                        surface.attach(Some(&buffer), 0, 0);
-                        surface.commit();
-                    }
+                if state.configured {
+                    let surface = state.base_surface.as_ref().unwrap();
+                    surface.attach(Some(&buffer), 0, 0);
+                    surface.commit();
                 }
-                "wl_seat" => {
-                    registry.bind::<wl_seat::WlSeat, _, _>(name, 1, qh, ());
-                }
-                "xdg_wm_base" => {
-                    let wm_base = registry.bind::<xdg_wm_base::XdgWmBase, _, _>(name, 1, qh, ());
-                    state.wm_base = Some(wm_base);
+            } else if interface == wl_seat::WlSeat::interface().name {
+                registry.bind::<wl_seat::WlSeat, _, _>(name, 1, qh, ());
+            } else if interface == xdg_wm_base::XdgWmBase::interface().name {
+                let wm_base = registry.bind::<xdg_wm_base::XdgWmBase, _, _>(name, 1, qh, ());
+                state.wm_base = Some(wm_base);
 
-                    if state.base_surface.is_some() && state.xdg_surface.is_none() {
-                        state.init_xdg_surface(qh);
-                    }
+                if state.base_surface.is_some() && state.xdg_surface.is_none() {
+                    state.init_xdg_surface(qh);
                 }
-                _ => {}
             }
         }
     }
@@ -264,7 +266,10 @@ impl Dispatch<wl_seat::WlSeat, ()> for State {
         _: &Connection,
         qh: &QueueHandle<Self>,
     ) {
-        if let wl_seat::Event::Capabilities { capabilities: WEnum::Value(capabilities) } = event {
+        if let wl_seat::Event::Capabilities {
+            capabilities: WEnum::Value(capabilities),
+        } = event
+        {
             if capabilities.contains(wl_seat::Capability::Keyboard) {
                 seat.get_keyboard(qh, ());
             }
@@ -289,4 +294,3 @@ impl Dispatch<wl_keyboard::WlKeyboard, ()> for State {
         }
     }
 }
-
