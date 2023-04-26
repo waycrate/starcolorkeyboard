@@ -1,15 +1,18 @@
 use std::{fs::File, os::unix::prelude::AsRawFd};
 use wayland_client::{
     protocol::{
-        wl_buffer, wl_compositor, wl_keyboard, wl_registry, wl_seat, wl_shm, wl_shm_pool,
-        wl_surface,
+        wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_registry, wl_seat, wl_shm,
+        wl_shm_pool, wl_surface,
     },
     Connection, Dispatch, Proxy, QueueHandle, WEnum,
 };
 
-//use wayland_protocols_wlr::layer_shell::v1::client::{zwlr_layer_shell_v1, zwlr_layer_surface_v1};
+use wayland_protocols_wlr::layer_shell::v1::client::{
+    zwlr_layer_shell_v1::{self, Layer},
+    zwlr_layer_surface_v1::{self, Anchor},
+};
 
-use wayland_protocols::xdg::shell::client::{xdg_surface, xdg_toplevel, xdg_wm_base};
+use wayland_protocols::xdg::shell::client::xdg_wm_base;
 
 fn main() {
     let conn = Connection::connect_to_env().unwrap();
@@ -22,14 +25,20 @@ fn main() {
 
     let mut state = State {
         running: true,
+        wl_outputs: Vec::new(),
         base_surface: None,
+        layer_shell: None,
+        layer_surface: None,
         buffer: None,
         wm_base: None,
-        xdg_surface: None,
         configured: false,
     };
 
-    println!("Starting the example window app, press <ESC> to quit.");
+    event_queue.blocking_dispatch(&mut state).unwrap();
+
+    if state.layer_shell.is_some() && state.wm_base.is_some() && !state.wl_outputs.is_empty() {
+        state.init_layer_surface(&qhandle);
+    }
 
     while state.running {
         event_queue.blocking_dispatch(&mut state).unwrap();
@@ -38,10 +47,12 @@ fn main() {
 
 struct State {
     running: bool,
+    wl_outputs: Vec<wl_output::WlOutput>,
     base_surface: Option<wl_surface::WlSurface>,
+    layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
+    layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
     buffer: Option<wl_buffer::WlBuffer>,
     wm_base: Option<xdg_wm_base::XdgWmBase>,
-    xdg_surface: Option<(xdg_surface::XdgSurface, xdg_toplevel::XdgToplevel)>,
     configured: bool,
 }
 
@@ -60,17 +71,23 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             version,
         } = event
         {
-            //if interface == zwlr_layer_surface_v1::ZwlrLayerSurfaceV1::interface().name {
-            //} else
-            if interface == wl_compositor::WlCompositor::interface().name {
+            if interface == wl_output::WlOutput::interface().name {
+                state
+                    .wl_outputs
+                    .push(registry.bind::<wl_output::WlOutput, _, _>(name, version, qh, ()));
+            } else if interface == zwlr_layer_shell_v1::ZwlrLayerShellV1::interface().name {
+                let wl_layer = registry.bind::<zwlr_layer_shell_v1::ZwlrLayerShellV1, _, _>(
+                    name,
+                    version,
+                    qh,
+                    (),
+                );
+                state.layer_shell = Some(wl_layer);
+            } else if interface == wl_compositor::WlCompositor::interface().name {
                 let compositor =
                     registry.bind::<wl_compositor::WlCompositor, _, _>(name, version, qh, ());
                 let surface = compositor.create_surface(qh, ());
                 state.base_surface = Some(surface);
-
-                if state.wm_base.is_some() && state.xdg_surface.is_none() {
-                    state.init_xdg_surface(qh);
-                }
             } else if interface == wl_shm::WlShm::interface().name {
                 let shm = registry.bind::<wl_shm::WlShm, _, _>(name, version, qh, ());
 
@@ -100,10 +117,6 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             } else if interface == xdg_wm_base::XdgWmBase::interface().name {
                 let wm_base = registry.bind::<xdg_wm_base::XdgWmBase, _, _>(name, 1, qh, ());
                 state.wm_base = Some(wm_base);
-
-                if state.base_surface.is_some() && state.xdg_surface.is_none() {
-                    state.init_xdg_surface(qh);
-                }
             }
         }
     }
@@ -119,6 +132,18 @@ impl Dispatch<wl_compositor::WlCompositor, ()> for State {
         _: &QueueHandle<Self>,
     ) {
         // wl_compositor has no event
+    }
+}
+
+impl Dispatch<wl_output::WlOutput, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &wl_output::WlOutput,
+        _event: <wl_output::WlOutput as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
     }
 }
 
@@ -192,17 +217,21 @@ fn draw(tmp: &mut File, (buf_x, buf_y): (u32, u32)) {
 }
 
 impl State {
-    fn init_xdg_surface(&mut self, qh: &QueueHandle<State>) {
-        let wm_base = self.wm_base.as_ref().unwrap();
-        let base_surface = self.base_surface.as_ref().unwrap();
+    fn init_layer_surface(&mut self, qh: &QueueHandle<State>) {
+        let layer = self.layer_shell.as_ref().unwrap().get_layer_surface(
+            self.base_surface.as_ref().unwrap(),
+            Some(&self.wl_outputs[0]),
+            Layer::Top,
+            "precure".to_string(),
+            qh,
+            (),
+        );
+        layer.set_anchor(Anchor::Top);
+        layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::OnDemand);
+        layer.set_size(1000, 1000);
+        self.base_surface.as_ref().unwrap().commit();
 
-        let xdg_surface = wm_base.get_xdg_surface(base_surface, qh, ());
-        let toplevel = xdg_surface.get_toplevel(qh, ());
-        toplevel.set_title("A fantastic window!".into());
-
-        base_surface.commit();
-
-        self.xdg_surface = Some((xdg_surface, toplevel));
+        self.layer_surface = Some(layer);
     }
 }
 
@@ -217,42 +246,6 @@ impl Dispatch<xdg_wm_base::XdgWmBase, ()> for State {
     ) {
         if let xdg_wm_base::Event::Ping { serial } = event {
             wm_base.pong(serial);
-        }
-    }
-}
-
-impl Dispatch<xdg_surface::XdgSurface, ()> for State {
-    fn event(
-        state: &mut Self,
-        xdg_surface: &xdg_surface::XdgSurface,
-        event: xdg_surface::Event,
-        _: &(),
-        _: &Connection,
-        _: &QueueHandle<Self>,
-    ) {
-        if let xdg_surface::Event::Configure { serial, .. } = event {
-            xdg_surface.ack_configure(serial);
-            state.configured = true;
-            let surface = state.base_surface.as_ref().unwrap();
-            if let Some(ref buffer) = state.buffer {
-                surface.attach(Some(buffer), 0, 0);
-                surface.commit();
-            }
-        }
-    }
-}
-
-impl Dispatch<xdg_toplevel::XdgToplevel, ()> for State {
-    fn event(
-        state: &mut Self,
-        _: &xdg_toplevel::XdgToplevel,
-        event: xdg_toplevel::Event,
-        _: &(),
-        _: &Connection,
-        _: &QueueHandle<Self>,
-    ) {
-        if let xdg_toplevel::Event::Close {} = event {
-            state.running = false;
         }
     }
 }
@@ -287,9 +280,43 @@ impl Dispatch<wl_keyboard::WlKeyboard, ()> for State {
         _: &QueueHandle<Self>,
     ) {
         if let wl_keyboard::Event::Key { key, .. } = event {
+            println!("key it is {key}");
             if key == 1 {
                 // ESC key
                 state.running = false;
+            }
+        }
+    }
+}
+
+impl Dispatch<zwlr_layer_shell_v1::ZwlrLayerShellV1, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &zwlr_layer_shell_v1::ZwlrLayerShellV1,
+        _event: <zwlr_layer_shell_v1::ZwlrLayerShellV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+    }
+}
+
+impl Dispatch<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1, ()> for State {
+    fn event(
+        state: &mut Self,
+        surface: &zwlr_layer_surface_v1::ZwlrLayerSurfaceV1,
+        event: <zwlr_layer_surface_v1::ZwlrLayerSurfaceV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+        if let zwlr_layer_surface_v1::Event::Configure { serial, .. } = event {
+            surface.ack_configure(serial);
+            state.configured = true;
+            let surface = state.base_surface.as_ref().unwrap();
+            if let Some(ref buffer) = state.buffer {
+                surface.attach(Some(buffer), 0, 0);
+                surface.commit();
             }
         }
     }
