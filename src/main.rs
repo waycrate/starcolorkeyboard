@@ -228,7 +228,7 @@ impl State {
         );
         layer.set_anchor(Anchor::Top);
         layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::OnDemand);
-        layer.set_size(1000, 1000);
+        layer.set_size(230, 300);
         self.base_surface.as_ref().unwrap().commit();
 
         self.layer_surface = Some(layer);
