@@ -31,7 +31,6 @@ fn main() {
         layer_surface: None,
         buffer: None,
         wm_base: None,
-        configured: false,
     };
 
     event_queue.blocking_dispatch(&mut state).unwrap();
@@ -53,7 +52,6 @@ struct State {
     layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
     buffer: Option<wl_buffer::WlBuffer>,
     wm_base: Option<xdg_wm_base::XdgWmBase>,
-    configured: bool,
 }
 
 impl Dispatch<wl_registry::WlRegistry, ()> for State {
@@ -106,12 +104,6 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
                     (),
                 );
                 state.buffer = Some(buffer.clone());
-
-                if state.configured {
-                    let surface = state.base_surface.as_ref().unwrap();
-                    surface.attach(Some(&buffer), 0, 0);
-                    surface.commit();
-                }
             } else if interface == wl_seat::WlSeat::interface().name {
                 registry.bind::<wl_seat::WlSeat, _, _>(name, 1, qh, ());
             } else if interface == xdg_wm_base::XdgWmBase::interface().name {
@@ -221,12 +213,12 @@ impl State {
         let layer = self.layer_shell.as_ref().unwrap().get_layer_surface(
             self.base_surface.as_ref().unwrap(),
             Some(&self.wl_outputs[0]),
-            Layer::Top,
+            Layer::Overlay,
             "precure".to_string(),
             qh,
             (),
         );
-        layer.set_anchor(Anchor::Top);
+        layer.set_anchor(Anchor::Top | Anchor::Left);
         layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::OnDemand);
         layer.set_size(230, 300);
         self.base_surface.as_ref().unwrap().commit();
@@ -312,7 +304,6 @@ impl Dispatch<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1, ()> for State {
     ) {
         if let zwlr_layer_surface_v1::Event::Configure { serial, .. } = event {
             surface.ack_configure(serial);
-            state.configured = true;
             let surface = state.base_surface.as_ref().unwrap();
             if let Some(ref buffer) = state.buffer {
                 surface.attach(Some(buffer), 0, 0);
