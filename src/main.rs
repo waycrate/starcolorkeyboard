@@ -89,7 +89,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             } else if interface == wl_shm::WlShm::interface().name {
                 let shm = registry.bind::<wl_shm::WlShm, _, _>(name, version, qh, ());
 
-                let (init_w, init_h) = (320, 240);
+                let (init_w, init_h) = (3200, 240);
 
                 let mut file = tempfile::tempfile().unwrap();
                 draw(&mut file, (init_w, init_h));
@@ -105,7 +105,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
                 );
                 state.buffer = Some(buffer.clone());
             } else if interface == wl_seat::WlSeat::interface().name {
-                registry.bind::<wl_seat::WlSeat, _, _>(name, 1, qh, ());
+                registry.bind::<wl_seat::WlSeat, _, _>(name, version, qh, ());
             } else if interface == xdg_wm_base::XdgWmBase::interface().name {
                 let wm_base = registry.bind::<xdg_wm_base::XdgWmBase, _, _>(name, 1, qh, ());
                 state.wm_base = Some(wm_base);
@@ -212,15 +212,16 @@ impl State {
     fn init_layer_surface(&mut self, qh: &QueueHandle<State>) {
         let layer = self.layer_shell.as_ref().unwrap().get_layer_surface(
             self.base_surface.as_ref().unwrap(),
-            Some(&self.wl_outputs[0]),
-            Layer::Overlay,
+            None,
+            Layer::Top,
             "precure".to_string(),
             qh,
             (),
         );
-        layer.set_anchor(Anchor::Top | Anchor::Left);
+        layer.set_anchor(Anchor::Bottom | Anchor::Right | Anchor::Left);
         layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::OnDemand);
-        layer.set_size(230, 300);
+        layer.set_size(0, 30);
+        layer.set_exclusive_zone(30);
         self.base_surface.as_ref().unwrap().commit();
 
         self.layer_surface = Some(layer);
