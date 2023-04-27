@@ -1,8 +1,8 @@
 use std::{fs::File, os::unix::prelude::AsRawFd};
 use wayland_client::{
     protocol::{
-        wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_registry, wl_seat, wl_shm,
-        wl_shm_pool, wl_surface,
+        wl_buffer, wl_compositor, wl_keyboard, wl_registry, wl_seat, wl_shm, wl_shm_pool,
+        wl_surface,
     },
     Connection, Dispatch, Proxy, QueueHandle, WEnum,
 };
@@ -25,7 +25,6 @@ fn main() {
 
     let mut state = State {
         running: true,
-        wl_outputs: Vec::new(),
         base_surface: None,
         layer_shell: None,
         layer_surface: None,
@@ -35,7 +34,7 @@ fn main() {
 
     event_queue.blocking_dispatch(&mut state).unwrap();
 
-    if state.layer_shell.is_some() && state.wm_base.is_some() && !state.wl_outputs.is_empty() {
+    if state.layer_shell.is_some() && state.wm_base.is_some() {
         state.init_layer_surface(&qhandle);
     }
 
@@ -46,7 +45,6 @@ fn main() {
 
 struct State {
     running: bool,
-    wl_outputs: Vec<wl_output::WlOutput>,
     base_surface: Option<wl_surface::WlSurface>,
     layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
     layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
@@ -69,11 +67,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             version,
         } = event
         {
-            if interface == wl_output::WlOutput::interface().name {
-                state
-                    .wl_outputs
-                    .push(registry.bind::<wl_output::WlOutput, _, _>(name, version, qh, ()));
-            } else if interface == zwlr_layer_shell_v1::ZwlrLayerShellV1::interface().name {
+            if interface == zwlr_layer_shell_v1::ZwlrLayerShellV1::interface().name {
                 let wl_layer = registry.bind::<zwlr_layer_shell_v1::ZwlrLayerShellV1, _, _>(
                     name,
                     version,
@@ -124,18 +118,6 @@ impl Dispatch<wl_compositor::WlCompositor, ()> for State {
         _: &QueueHandle<Self>,
     ) {
         // wl_compositor has no event
-    }
-}
-
-impl Dispatch<wl_output::WlOutput, ()> for State {
-    fn event(
-        _state: &mut Self,
-        _proxy: &wl_output::WlOutput,
-        _event: <wl_output::WlOutput as Proxy>::Event,
-        _data: &(),
-        _conn: &Connection,
-        _qhandle: &QueueHandle<Self>,
-    ) {
     }
 }
 
