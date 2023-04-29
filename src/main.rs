@@ -1,8 +1,8 @@
 use std::{fs::File, os::unix::prelude::AsRawFd};
 use wayland_client::{
     protocol::{
-        wl_buffer, wl_compositor, wl_keyboard, wl_registry, wl_seat, wl_shm, wl_shm_pool,
-        wl_surface,
+        wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_registry, wl_seat, wl_shm,
+        wl_shm_pool, wl_surface,
     },
     Connection, Dispatch, Proxy, QueueHandle, WEnum,
 };
@@ -25,6 +25,7 @@ fn main() {
 
     let mut state = State {
         running: true,
+        wl_output: None,
         base_surface: None,
         layer_shell: None,
         layer_surface: None,
@@ -45,6 +46,7 @@ fn main() {
 
 struct State {
     running: bool,
+    wl_output: Option<wl_output::WlOutput>,
     base_surface: Option<wl_surface::WlSurface>,
     layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
     layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
@@ -67,7 +69,11 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             version,
         } = event
         {
-            if interface == zwlr_layer_shell_v1::ZwlrLayerShellV1::interface().name {
+            if interface == wl_output::WlOutput::interface().name && state.wl_output.is_none() {
+                let wl_output = registry.bind::<wl_output::WlOutput, _, _>(name, version, qh, ());
+                println!("{wl_output:?}");
+                state.wl_output = Some(wl_output);
+            } else if interface == zwlr_layer_shell_v1::ZwlrLayerShellV1::interface().name {
                 let wl_layer = registry.bind::<zwlr_layer_shell_v1::ZwlrLayerShellV1, _, _>(
                     name,
                     version,
@@ -107,7 +113,20 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
         }
     }
 }
-
+impl Dispatch<wl_output::WlOutput, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &wl_output::WlOutput,
+        event: <wl_output::WlOutput as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+        if let wl_output::Event::Mode { width, height, .. } = event {
+            println!("{width}, {height}");
+        }
+    }
+}
 impl Dispatch<wl_compositor::WlCompositor, ()> for State {
     fn event(
         _: &mut Self,
