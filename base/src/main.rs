@@ -279,6 +279,11 @@ impl Dispatch<wl_keyboard::WlKeyboard, ()> for State {
                 // ESC key
                 state.running = false;
             }
+            let surface = state.base_surface.as_ref().unwrap();
+            if let Some(ref buffer) = state.buffer {
+                surface.attach(Some(buffer), 0, 0);
+                surface.commit();
+            }
         }
     }
 }
