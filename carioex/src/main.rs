@@ -15,7 +15,9 @@ use wayland_protocols_wlr::layer_shell::v1::client::{
 
 use wayland_protocols::xdg::shell::client::xdg_wm_base;
 
-use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_manager_v1::{self, ZxdgOutputManagerV1};
+use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_manager_v1::{
+    self, ZxdgOutputManagerV1,
+};
 use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_v1::{self, ZxdgOutputV1};
 
 fn main() {
@@ -37,7 +39,7 @@ fn main() {
         layer_surface: None,
         buffer: None,
         wm_base: None,
-        xdg_output_manager: None
+        xdg_output_manager: None,
     };
 
     event_queue.blocking_dispatch(&mut state).unwrap();
@@ -47,7 +49,11 @@ fn main() {
         displays = state.wl_output.len() + 1;
     }
     for index in 0..state.wl_output.len() {
-        state.xdg_output_manager.as_ref().unwrap().get_xdg_output(&state.wl_output[index], &qhandle, ());
+        state.xdg_output_manager.as_ref().unwrap().get_xdg_output(
+            &state.wl_output[index],
+            &qhandle,
+            (),
+        );
         event_queue.blocking_dispatch(&mut state).unwrap();
     }
     if state.layer_shell.is_some() && state.wm_base.is_some() {
@@ -74,7 +80,7 @@ struct State {
     layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
     buffer: Option<wl_buffer::WlBuffer>,
     wm_base: Option<xdg_wm_base::XdgWmBase>,
-    xdg_output_manager : Option<zxdg_output_manager_v1::ZxdgOutputManagerV1>
+    xdg_output_manager: Option<zxdg_output_manager_v1::ZxdgOutputManagerV1>,
 }
 
 impl State {
@@ -82,7 +88,7 @@ impl State {
         let shm = self.wl_shm.as_ref().unwrap();
         let mut file = tempfile::tempfile().unwrap();
         draw(&mut file, (width, height));
-        let pool = shm.create_pool(file.as_raw_fd(), (width * height * 4) as i32, qh, ());
+        let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
         let buffer = pool.create_buffer(
             0,
             width,
@@ -92,7 +98,7 @@ impl State {
             qh,
             (),
         );
-        self.buffer = Some(buffer.clone());
+        self.buffer = Some(buffer);
     }
 
     fn get_size_from_display(&self, index: usize) -> (i32, i32) {
@@ -141,7 +147,13 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
                 let wm_base = registry.bind::<xdg_wm_base::XdgWmBase, _, _>(name, 1, qh, ());
                 state.wm_base = Some(wm_base);
             } else if interface == zxdg_output_manager_v1::ZxdgOutputManagerV1::interface().name {
-                let xdg_output_manager = registry.bind::<zxdg_output_manager_v1::ZxdgOutputManagerV1, _, _>(name, version, qh, ());
+                let xdg_output_manager = registry
+                    .bind::<zxdg_output_manager_v1::ZxdgOutputManagerV1, _, _>(
+                        name,
+                        version,
+                        qh,
+                        (),
+                    );
                 state.xdg_output_manager = Some(xdg_output_manager);
             }
         }
@@ -171,11 +183,8 @@ impl Dispatch<ZxdgOutputV1, ()> for State {
         _conn: &Connection,
         _qhandle: &QueueHandle<Self>,
     ) {
-        match event {
-            zxdg_output_v1::Event::LogicalSize { width, height } => {
-                state.wl_size.push((width, height));
-            }
-            _ => {}
+        if let zxdg_output_v1::Event::LogicalSize { width, height } = event {
+            state.wl_size.push((width, height));
         }
     }
 }
