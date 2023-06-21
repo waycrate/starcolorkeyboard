@@ -26,7 +26,9 @@ fn main() {
 
     let mut state = State {
         running: true,
-        wl_output: None,
+        wl_output: vec![],
+        wl_size: vec![],
+        wl_shm: None,
         base_surface: None,
         layer_shell: None,
         layer_surface: None,
@@ -35,9 +37,9 @@ fn main() {
     };
 
     event_queue.blocking_dispatch(&mut state).unwrap();
-
+    state.set_buffer(&qhandle);
     if state.layer_shell.is_some() && state.wm_base.is_some() {
-        state.init_layer_surface(&qhandle);
+        state.init_layer_surface(&qhandle, None);
     }
 
     while state.running {
@@ -47,12 +49,35 @@ fn main() {
 
 struct State {
     running: bool,
-    wl_output: Option<wl_output::WlOutput>,
+    wl_output: Vec<wl_output::WlOutput>,
+    wl_size: Vec<(i32, i32)>,
+    wl_shm: Option<wl_shm::WlShm>,
     base_surface: Option<wl_surface::WlSurface>,
     layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
     layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
     buffer: Option<wl_buffer::WlBuffer>,
     wm_base: Option<xdg_wm_base::XdgWmBase>,
+}
+
+impl State {
+    fn set_buffer(&mut self, qh: &QueueHandle<Self>) {
+        let shm = self.wl_shm.as_ref().unwrap();
+        let (init_w, init_h) = (300, 300);
+
+        let mut file = tempfile::tempfile().unwrap();
+        draw(&mut file, (init_w, init_h));
+        let pool = shm.create_pool(file.as_raw_fd(), (init_w * init_h * 4) as i32, qh, ());
+        let buffer = pool.create_buffer(
+            0,
+            init_w as i32,
+            init_h as i32,
+            (init_w * 4) as i32,
+            wl_shm::Format::Argb8888,
+            qh,
+            (),
+        );
+        self.buffer = Some(buffer.clone());
+    }
 }
 
 impl Dispatch<wl_registry::WlRegistry, ()> for State {
@@ -70,10 +95,11 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             version,
         } = event
         {
-            if interface == wl_output::WlOutput::interface().name && state.wl_output.is_none() {
+            if interface == wl_output::WlOutput::interface().name {
+                //&& state.wl_output.is_none() {
                 let wl_output = registry.bind::<wl_output::WlOutput, _, _>(name, version, qh, ());
                 println!("{wl_output:?}");
-                state.wl_output = Some(wl_output);
+                state.wl_output.push(wl_output);
             } else if interface == zwlr_layer_shell_v1::ZwlrLayerShellV1::interface().name {
                 let wl_layer = registry.bind::<zwlr_layer_shell_v1::ZwlrLayerShellV1, _, _>(
                     name,
@@ -88,23 +114,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
                 let surface = compositor.create_surface(qh, ());
                 state.base_surface = Some(surface);
             } else if interface == wl_shm::WlShm::interface().name {
-                let shm = registry.bind::<wl_shm::WlShm, _, _>(name, version, qh, ());
-
-                let (init_w, init_h) = (300, 300);
-
-                let mut file = tempfile::tempfile().unwrap();
-                draw(&mut file, (init_w, init_h));
-                let pool = shm.create_pool(file.as_raw_fd(), (init_w * init_h * 4) as i32, qh, ());
-                let buffer = pool.create_buffer(
-                    0,
-                    init_w as i32,
-                    init_h as i32,
-                    (init_w * 4) as i32,
-                    wl_shm::Format::Argb8888,
-                    qh,
-                    (),
-                );
-                state.buffer = Some(buffer.clone());
+                state.wl_shm = Some(registry.bind::<wl_shm::WlShm, _, _>(name, version, qh, ()));
             } else if interface == wl_seat::WlSeat::interface().name {
                 registry.bind::<wl_seat::WlSeat, _, _>(name, version, qh, ());
             } else if interface == xdg_wm_base::XdgWmBase::interface().name {
@@ -116,7 +126,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
 }
 impl Dispatch<wl_output::WlOutput, ()> for State {
     fn event(
-        _state: &mut Self,
+        state: &mut Self,
         _proxy: &wl_output::WlOutput,
         event: <wl_output::WlOutput as Proxy>::Event,
         _data: &(),
@@ -124,6 +134,7 @@ impl Dispatch<wl_output::WlOutput, ()> for State {
         _qhandle: &QueueHandle<Self>,
     ) {
         if let wl_output::Event::Mode { width, height, .. } = event {
+            state.wl_size.push((width, height));
             println!("{width}, {height}");
         }
     }
@@ -205,10 +216,14 @@ fn draw(tmp: &mut File, (_buf_x, _buf_y): (u32, u32)) {
 }
 
 impl State {
-    fn init_layer_surface(&mut self, qh: &QueueHandle<State>) {
+    fn init_layer_surface(
+        &mut self,
+        qh: &QueueHandle<State>,
+        output: Option<&wl_output::WlOutput>,
+    ) {
         let layer = self.layer_shell.as_ref().unwrap().get_layer_surface(
             self.base_surface.as_ref().unwrap(),
-            None,
+            output,
             Layer::Top,
             "precure".to_string(),
             qh,
