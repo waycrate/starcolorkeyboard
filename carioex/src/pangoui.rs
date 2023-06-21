@@ -39,10 +39,8 @@ fn draw_text(content: &Context) {
     }
 }
 
-pub fn ui() -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
-    let surface =
-        cairo::ImageSurface::create(cairo::Format::ARgb32, 2 * RADIUS as i32, 2 * RADIUS as i32)
-            .unwrap();
+pub fn ui(width: i32, height: i32) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
+    let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, width, height).unwrap();
     let cr = cairo::Context::new(&surface).unwrap();
     cr.set_source_rgb(1_f64, 1_f64, 1_f64);
     cr.paint().unwrap();

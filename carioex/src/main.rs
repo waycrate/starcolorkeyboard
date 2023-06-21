@@ -15,6 +15,9 @@ use wayland_protocols_wlr::layer_shell::v1::client::{
 
 use wayland_protocols::xdg::shell::client::xdg_wm_base;
 
+use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_manager_v1::{self, ZxdgOutputManagerV1};
+use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_v1::{self, ZxdgOutputV1};
+
 fn main() {
     let conn = Connection::connect_to_env().unwrap();
 
@@ -34,12 +37,26 @@ fn main() {
         layer_surface: None,
         buffer: None,
         wm_base: None,
+        xdg_output_manager: None
     };
 
     event_queue.blocking_dispatch(&mut state).unwrap();
-    state.set_buffer(&qhandle);
+    let mut displays: usize = 0;
+    while displays < state.wl_output.len() + 1 {
+        event_queue.blocking_dispatch(&mut state).unwrap();
+        displays = state.wl_output.len() + 1;
+    }
+    for index in 0..state.wl_output.len() {
+        state.xdg_output_manager.as_ref().unwrap().get_xdg_output(&state.wl_output[index], &qhandle, ());
+        event_queue.blocking_dispatch(&mut state).unwrap();
+    }
     if state.layer_shell.is_some() && state.wm_base.is_some() {
-        state.init_layer_surface(&qhandle, None);
+        state.set_buffer(state.get_size_from_display(0), &qhandle);
+        state.init_layer_surface(
+            &qhandle,
+            state.get_size_from_display(0),
+            Some(&state.wl_output[0].clone()),
+        );
     }
 
     while state.running {
@@ -57,26 +74,29 @@ struct State {
     layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
     buffer: Option<wl_buffer::WlBuffer>,
     wm_base: Option<xdg_wm_base::XdgWmBase>,
+    xdg_output_manager : Option<zxdg_output_manager_v1::ZxdgOutputManagerV1>
 }
 
 impl State {
-    fn set_buffer(&mut self, qh: &QueueHandle<Self>) {
+    fn set_buffer(&mut self, (width, height): (i32, i32), qh: &QueueHandle<Self>) {
         let shm = self.wl_shm.as_ref().unwrap();
-        let (init_w, init_h) = (300, 300);
-
         let mut file = tempfile::tempfile().unwrap();
-        draw(&mut file, (init_w, init_h));
-        let pool = shm.create_pool(file.as_raw_fd(), (init_w * init_h * 4) as i32, qh, ());
+        draw(&mut file, (width, height));
+        let pool = shm.create_pool(file.as_raw_fd(), (width * height * 4) as i32, qh, ());
         let buffer = pool.create_buffer(
             0,
-            init_w as i32,
-            init_h as i32,
-            (init_w * 4) as i32,
+            width,
+            height,
+            width * 4,
             wl_shm::Format::Argb8888,
             qh,
             (),
         );
         self.buffer = Some(buffer.clone());
+    }
+
+    fn get_size_from_display(&self, index: usize) -> (i32, i32) {
+        self.wl_size[index]
     }
 }
 
@@ -120,13 +140,16 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             } else if interface == xdg_wm_base::XdgWmBase::interface().name {
                 let wm_base = registry.bind::<xdg_wm_base::XdgWmBase, _, _>(name, 1, qh, ());
                 state.wm_base = Some(wm_base);
+            } else if interface == zxdg_output_manager_v1::ZxdgOutputManagerV1::interface().name {
+                let xdg_output_manager = registry.bind::<zxdg_output_manager_v1::ZxdgOutputManagerV1, _, _>(name, version, qh, ());
+                state.xdg_output_manager = Some(xdg_output_manager);
             }
         }
     }
 }
 impl Dispatch<wl_output::WlOutput, ()> for State {
     fn event(
-        state: &mut Self,
+        _state: &mut Self,
         _proxy: &wl_output::WlOutput,
         event: <wl_output::WlOutput as Proxy>::Event,
         _data: &(),
@@ -134,9 +157,38 @@ impl Dispatch<wl_output::WlOutput, ()> for State {
         _qhandle: &QueueHandle<Self>,
     ) {
         if let wl_output::Event::Mode { width, height, .. } = event {
-            state.wl_size.push((width, height));
+            //state.wl_size.push((width, height));
             println!("{width}, {height}");
         }
+    }
+}
+impl Dispatch<ZxdgOutputV1, ()> for State {
+    fn event(
+        state: &mut Self,
+        _proxy: &ZxdgOutputV1,
+        event: <ZxdgOutputV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+        match event {
+            zxdg_output_v1::Event::LogicalSize { width, height } => {
+                state.wl_size.push((width, height));
+            }
+            _ => {}
+        }
+    }
+}
+
+impl Dispatch<ZxdgOutputManagerV1, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &ZxdgOutputManagerV1,
+        _event: <ZxdgOutputManagerV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
     }
 }
 impl Dispatch<wl_compositor::WlCompositor, ()> for State {
@@ -204,12 +256,12 @@ impl Dispatch<wl_buffer::WlBuffer, ()> for State {
     }
 }
 
-fn draw(tmp: &mut File, (_buf_x, _buf_y): (u32, u32)) {
+fn draw(tmp: &mut File, (_buf_x, _buf_y): (i32, i32)) {
     use std::io::Write;
 
     let mut buf = std::io::BufWriter::new(tmp);
 
-    for index in pangoui::ui().pixels() {
+    for index in pangoui::ui(_buf_x, _buf_y).pixels() {
         buf.write_all(&index.0).unwrap();
     }
     buf.flush().unwrap();
@@ -219,19 +271,20 @@ impl State {
     fn init_layer_surface(
         &mut self,
         qh: &QueueHandle<State>,
+        (width, height): (i32, i32),
         output: Option<&wl_output::WlOutput>,
     ) {
         let layer = self.layer_shell.as_ref().unwrap().get_layer_surface(
             self.base_surface.as_ref().unwrap(),
             output,
-            Layer::Top,
+            Layer::Overlay,
             "precure".to_string(),
             qh,
             (),
         );
-        layer.set_anchor(Anchor::Right | Anchor::Left);
+        layer.set_anchor(Anchor::Bottom | Anchor::Right);
         layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::OnDemand);
-        layer.set_size(300, 300);
+        layer.set_size(width as u32, height as u32);
         self.base_surface.as_ref().unwrap().commit();
 
         self.layer_surface = Some(layer);
