@@ -103,7 +103,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
                     qh,
                     (),
                 );
-                state.buffer = Some(buffer.clone());
+                state.buffer = Some(buffer);
             } else if interface == wl_seat::WlSeat::interface().name {
                 registry.bind::<wl_seat::WlSeat, _, _>(name, version, qh, ());
             } else if interface == xdg_wm_base::XdgWmBase::interface().name {
