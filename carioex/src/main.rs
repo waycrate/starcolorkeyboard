@@ -2,7 +2,7 @@ mod pangoui;
 use std::{fs::File, os::unix::prelude::AsRawFd};
 use wayland_client::{
     protocol::{
-        wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_registry, wl_seat, wl_shm,
+        wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_pointer, wl_registry, wl_seat, wl_shm,
         wl_shm_pool, wl_surface,
     },
     Connection, Dispatch, Proxy, QueueHandle, WEnum,
@@ -102,7 +102,7 @@ impl State {
     }
 
     fn get_size_from_display(&self, index: usize) -> (i32, i32) {
-        self.wl_size[index]
+        (self.wl_size[index].0, 300)
     }
 }
 
@@ -280,20 +280,21 @@ impl State {
     fn init_layer_surface(
         &mut self,
         qh: &QueueHandle<State>,
-        (width, height): (i32, i32),
+        (_width, height): (i32, i32),
         output: Option<&wl_output::WlOutput>,
     ) {
         let layer = self.layer_shell.as_ref().unwrap().get_layer_surface(
             self.base_surface.as_ref().unwrap(),
             output,
-            Layer::Overlay,
+            Layer::Top,
             "precure".to_string(),
             qh,
             (),
         );
-        layer.set_anchor(Anchor::Bottom | Anchor::Right);
+        layer.set_anchor(Anchor::Bottom | Anchor::Right | Anchor::Left);
         layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::OnDemand);
-        layer.set_size(width as u32, height as u32);
+        layer.set_exclusive_zone(height);
+        layer.set_size(0, height as u32);
         self.base_surface.as_ref().unwrap().commit();
 
         self.layer_surface = Some(layer);
@@ -317,7 +318,7 @@ impl Dispatch<xdg_wm_base::XdgWmBase, ()> for State {
 
 impl Dispatch<wl_seat::WlSeat, ()> for State {
     fn event(
-        _: &mut Self,
+        _state: &mut Self,
         seat: &wl_seat::WlSeat,
         event: wl_seat::Event,
         _: &(),
@@ -330,6 +331,9 @@ impl Dispatch<wl_seat::WlSeat, ()> for State {
         {
             if capabilities.contains(wl_seat::Capability::Keyboard) {
                 seat.get_keyboard(qh, ());
+            }
+            if capabilities.contains(wl_seat::Capability::Pointer) {
+                seat.get_pointer(qh, ());
             }
         }
     }
@@ -354,6 +358,18 @@ impl Dispatch<wl_keyboard::WlKeyboard, ()> for State {
     }
 }
 
+impl Dispatch<wl_pointer::WlPointer, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &wl_pointer::WlPointer,
+        event: <wl_pointer::WlPointer as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+        println!("{event:?}");
+    }
+}
 impl Dispatch<zwlr_layer_shell_v1::ZwlrLayerShellV1, ()> for State {
     fn event(
         _state: &mut Self,
