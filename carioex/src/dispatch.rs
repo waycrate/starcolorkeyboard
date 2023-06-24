@@ -1,4 +1,5 @@
 use super::State;
+
 use wayland_client::{
     protocol::{
         wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_pointer, wl_registry, wl_seat, wl_shm,
@@ -11,10 +12,16 @@ use wayland_protocols_wlr::layer_shell::v1::client::{zwlr_layer_shell_v1, zwlr_l
 
 use wayland_protocols::xdg::shell::client::xdg_wm_base;
 
-use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_manager_v1::{
-    self, ZxdgOutputManagerV1,
+use wayland_protocols::xdg::xdg_output::zv1::client::{
+    zxdg_output_manager_v1::{self, ZxdgOutputManagerV1},
+    zxdg_output_v1::{self, ZxdgOutputV1},
 };
-use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_v1::{self, ZxdgOutputV1};
+
+use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::{
+    zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1,
+    zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1,
+};
+
 impl Dispatch<wl_registry::WlRegistry, ()> for State {
     fn event(
         state: &mut Self,
@@ -51,7 +58,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             } else if interface == wl_shm::WlShm::interface().name {
                 state.wl_shm = Some(registry.bind::<wl_shm::WlShm, _, _>(name, version, qh, ()));
             } else if interface == wl_seat::WlSeat::interface().name {
-                registry.bind::<wl_seat::WlSeat, _, _>(name, version, qh, ());
+                state.wl_seat = Some(registry.bind::<wl_seat::WlSeat, _, _>(name, version, qh, ()));
             } else if interface == xdg_wm_base::XdgWmBase::interface().name {
                 let wm_base = registry.bind::<xdg_wm_base::XdgWmBase, _, _>(name, 1, qh, ());
                 state.wm_base = Some(wm_base);
@@ -64,6 +71,10 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
                         (),
                     );
                 state.xdg_output_manager = Some(xdg_output_manager);
+            } else if interface == ZwpVirtualKeyboardManagerV1::interface().name {
+                let virtual_keyboard_manager =
+                    registry.bind::<ZwpVirtualKeyboardManagerV1, _, _>(name, version, qh, ());
+                state.virtual_keyboard_manager = Some(virtual_keyboard_manager);
             }
         }
     }
@@ -233,14 +244,17 @@ impl Dispatch<wl_keyboard::WlKeyboard, ()> for State {
 
 impl Dispatch<wl_pointer::WlPointer, ()> for State {
     fn event(
-        _state: &mut Self,
+        state: &mut Self,
         _proxy: &wl_pointer::WlPointer,
         event: <wl_pointer::WlPointer as Proxy>::Event,
         _data: &(),
         _conn: &Connection,
         _qhandle: &QueueHandle<Self>,
     ) {
-        println!("{event:?}");
+        if let wl_pointer::Event::Button { .. } = event {
+            state.key_press();
+        }
+
     }
 }
 impl Dispatch<zwlr_layer_shell_v1::ZwlrLayerShellV1, ()> for State {
@@ -272,5 +286,29 @@ impl Dispatch<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1, ()> for State {
                 surface.commit();
             }
         }
+    }
+}
+
+impl Dispatch<ZwpVirtualKeyboardManagerV1, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &ZwpVirtualKeyboardManagerV1,
+        _event: <ZwpVirtualKeyboardManagerV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+    }
+}
+
+impl Dispatch<ZwpVirtualKeyboardV1, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &ZwpVirtualKeyboardV1,
+        _event: <ZwpVirtualKeyboardV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
     }
 }
