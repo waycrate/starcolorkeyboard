@@ -1,0 +1,276 @@
+use super::State;
+use wayland_client::{
+    protocol::{
+        wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_pointer, wl_registry, wl_seat, wl_shm,
+        wl_shm_pool, wl_surface,
+    },
+    Connection, Dispatch, Proxy, QueueHandle, WEnum,
+};
+
+use wayland_protocols_wlr::layer_shell::v1::client::{zwlr_layer_shell_v1, zwlr_layer_surface_v1};
+
+use wayland_protocols::xdg::shell::client::xdg_wm_base;
+
+use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_manager_v1::{
+    self, ZxdgOutputManagerV1,
+};
+use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_v1::{self, ZxdgOutputV1};
+impl Dispatch<wl_registry::WlRegistry, ()> for State {
+    fn event(
+        state: &mut Self,
+        registry: &wl_registry::WlRegistry,
+        event: wl_registry::Event,
+        _: &(),
+        _: &Connection,
+        qh: &QueueHandle<Self>,
+    ) {
+        if let wl_registry::Event::Global {
+            name,
+            interface,
+            version,
+        } = event
+        {
+            if interface == wl_output::WlOutput::interface().name {
+                //&& state.wl_output.is_none() {
+                let wl_output = registry.bind::<wl_output::WlOutput, _, _>(name, version, qh, ());
+                println!("{wl_output:?}");
+                state.wl_output.push(wl_output);
+            } else if interface == zwlr_layer_shell_v1::ZwlrLayerShellV1::interface().name {
+                let wl_layer = registry.bind::<zwlr_layer_shell_v1::ZwlrLayerShellV1, _, _>(
+                    name,
+                    version,
+                    qh,
+                    (),
+                );
+                state.layer_shell = Some(wl_layer);
+            } else if interface == wl_compositor::WlCompositor::interface().name {
+                let compositor =
+                    registry.bind::<wl_compositor::WlCompositor, _, _>(name, version, qh, ());
+                let surface = compositor.create_surface(qh, ());
+                state.base_surface = Some(surface);
+            } else if interface == wl_shm::WlShm::interface().name {
+                state.wl_shm = Some(registry.bind::<wl_shm::WlShm, _, _>(name, version, qh, ()));
+            } else if interface == wl_seat::WlSeat::interface().name {
+                registry.bind::<wl_seat::WlSeat, _, _>(name, version, qh, ());
+            } else if interface == xdg_wm_base::XdgWmBase::interface().name {
+                let wm_base = registry.bind::<xdg_wm_base::XdgWmBase, _, _>(name, 1, qh, ());
+                state.wm_base = Some(wm_base);
+            } else if interface == zxdg_output_manager_v1::ZxdgOutputManagerV1::interface().name {
+                let xdg_output_manager = registry
+                    .bind::<zxdg_output_manager_v1::ZxdgOutputManagerV1, _, _>(
+                        name,
+                        version,
+                        qh,
+                        (),
+                    );
+                state.xdg_output_manager = Some(xdg_output_manager);
+            }
+        }
+    }
+}
+impl Dispatch<wl_output::WlOutput, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &wl_output::WlOutput,
+        event: <wl_output::WlOutput as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+        if let wl_output::Event::Mode { width, height, .. } = event {
+            //state.wl_size.push((width, height));
+            println!("{width}, {height}");
+        }
+    }
+}
+impl Dispatch<ZxdgOutputV1, ()> for State {
+    fn event(
+        state: &mut Self,
+        _proxy: &ZxdgOutputV1,
+        event: <ZxdgOutputV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+        if let zxdg_output_v1::Event::LogicalSize { width, height } = event {
+            state.wl_size.push((width, height));
+        }
+    }
+}
+
+impl Dispatch<ZxdgOutputManagerV1, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &ZxdgOutputManagerV1,
+        _event: <ZxdgOutputManagerV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+    }
+}
+impl Dispatch<wl_compositor::WlCompositor, ()> for State {
+    fn event(
+        _: &mut Self,
+        _: &wl_compositor::WlCompositor,
+        _: wl_compositor::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+        // wl_compositor has no event
+    }
+}
+
+impl Dispatch<wl_surface::WlSurface, ()> for State {
+    fn event(
+        _: &mut Self,
+        _: &wl_surface::WlSurface,
+        _: wl_surface::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+        // we ignore wl_surface events in this example
+    }
+}
+
+impl Dispatch<wl_shm::WlShm, ()> for State {
+    fn event(
+        _: &mut Self,
+        _: &wl_shm::WlShm,
+        _: wl_shm::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+        // we ignore wl_shm events in this example
+    }
+}
+
+impl Dispatch<wl_shm_pool::WlShmPool, ()> for State {
+    fn event(
+        _: &mut Self,
+        _: &wl_shm_pool::WlShmPool,
+        _: wl_shm_pool::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+        // we ignore wl_shm_pool events in this example
+    }
+}
+
+impl Dispatch<wl_buffer::WlBuffer, ()> for State {
+    fn event(
+        _: &mut Self,
+        _: &wl_buffer::WlBuffer,
+        _: wl_buffer::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+        // we ignore wl_buffer events in this example
+    }
+}
+
+impl Dispatch<xdg_wm_base::XdgWmBase, ()> for State {
+    fn event(
+        _: &mut Self,
+        wm_base: &xdg_wm_base::XdgWmBase,
+        event: xdg_wm_base::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+        if let xdg_wm_base::Event::Ping { serial } = event {
+            wm_base.pong(serial);
+        }
+    }
+}
+
+impl Dispatch<wl_seat::WlSeat, ()> for State {
+    fn event(
+        _state: &mut Self,
+        seat: &wl_seat::WlSeat,
+        event: wl_seat::Event,
+        _: &(),
+        _: &Connection,
+        qh: &QueueHandle<Self>,
+    ) {
+        if let wl_seat::Event::Capabilities {
+            capabilities: WEnum::Value(capabilities),
+        } = event
+        {
+            if capabilities.contains(wl_seat::Capability::Keyboard) {
+                seat.get_keyboard(qh, ());
+            }
+            if capabilities.contains(wl_seat::Capability::Pointer) {
+                seat.get_pointer(qh, ());
+            }
+        }
+    }
+}
+
+impl Dispatch<wl_keyboard::WlKeyboard, ()> for State {
+    fn event(
+        state: &mut Self,
+        _: &wl_keyboard::WlKeyboard,
+        event: wl_keyboard::Event,
+        _: &(),
+        _: &Connection,
+        _: &QueueHandle<Self>,
+    ) {
+        if let wl_keyboard::Event::Key { key, .. } = event {
+            println!("key it is {key}");
+            if key == 1 {
+                // ESC key
+                state.running = false;
+            }
+        }
+    }
+}
+
+impl Dispatch<wl_pointer::WlPointer, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &wl_pointer::WlPointer,
+        event: <wl_pointer::WlPointer as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+        println!("{event:?}");
+    }
+}
+impl Dispatch<zwlr_layer_shell_v1::ZwlrLayerShellV1, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &zwlr_layer_shell_v1::ZwlrLayerShellV1,
+        _event: <zwlr_layer_shell_v1::ZwlrLayerShellV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+    }
+}
+
+impl Dispatch<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1, ()> for State {
+    fn event(
+        state: &mut Self,
+        surface: &zwlr_layer_surface_v1::ZwlrLayerSurfaceV1,
+        event: <zwlr_layer_surface_v1::ZwlrLayerSurfaceV1 as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+        if let zwlr_layer_surface_v1::Event::Configure { serial, .. } = event {
+            surface.ack_configure(serial);
+            let surface = state.base_surface.as_ref().unwrap();
+            if let Some(ref buffer) = state.buffer {
+                surface.attach(Some(buffer), 0, 0);
+                surface.commit();
+            }
+        }
+    }
+}
