@@ -292,7 +292,7 @@ impl State {
             (),
         );
         layer.set_anchor(Anchor::Bottom | Anchor::Right | Anchor::Left);
-        layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::OnDemand);
+        layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::None);
         layer.set_exclusive_zone(height);
         layer.set_size(0, height as u32);
         self.base_surface.as_ref().unwrap().commit();
