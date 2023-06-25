@@ -244,17 +244,24 @@ impl Dispatch<wl_keyboard::WlKeyboard, ()> for State {
 
 impl Dispatch<wl_pointer::WlPointer, ()> for State {
     fn event(
-        state: &mut Self,
+        wlstate: &mut Self,
         _proxy: &wl_pointer::WlPointer,
         event: <wl_pointer::WlPointer as Proxy>::Event,
         _data: &(),
         _conn: &Connection,
         _qhandle: &QueueHandle<Self>,
     ) {
-        if let wl_pointer::Event::Button { .. } = event {
-            state.key_press();
+        if let wl_pointer::Event::Button { state, .. } = event {
+            match state {
+                WEnum::Value(wl_pointer::ButtonState::Pressed) => {
+                    wlstate.key_press();
+                }
+                WEnum::Value(wl_pointer::ButtonState::Released) => {
+                    wlstate.key_release();
+                }
+                _ => {}
+            }
         }
-
     }
 }
 impl Dispatch<zwlr_layer_shell_v1::ZwlrLayerShellV1, ()> for State {

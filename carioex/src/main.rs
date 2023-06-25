@@ -191,6 +191,10 @@ impl State {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
         virtual_keyboard.key(1, 12, KeyState::Pressed.into());
     }
+    fn key_release(&self) {
+        let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
+        virtual_keyboard.key(1, 12, KeyState::Released.into());
+    }
 }
 
 fn draw(tmp: &mut File, (_buf_x, _buf_y): (i32, i32)) {
