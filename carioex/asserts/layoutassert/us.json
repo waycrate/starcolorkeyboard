@@ -1,0 +1,323 @@
+{
+  "name": "usbase",
+  "layoutname": "us",
+  "keys": [
+    {
+      "mainkey": "`",
+      "y": 0,
+      "menu": "esc"
+    },
+    {
+      "mainkey": "1",
+      "extra": "!",
+      "y": 0
+    },
+    {
+      "mainkey": "2",
+      "extra": "@",
+      "y": 0
+    },
+    {
+      "mainkey": "3",
+      "extra": "#",
+      "y": 0
+    },
+    {
+      "mainkey": "4",
+      "extra": "$",
+      "y": 0
+    },
+    {
+      "mainkey": "5",
+      "extra": "%",
+      "y": 0
+    },
+    {
+      "mainkey": "6",
+      "extra": "^",
+      "y": 0
+    },
+    {
+      "mainkey": "7",
+      "extra": "&",
+      "y": 0
+    },
+    {
+      "mainkey": "8",
+      "extra": "*",
+      "y": 0
+    },
+    {
+      "mainkey": "9",
+      "extra": "(",
+      "y": 0
+    },
+    {
+      "mainkey": "0",
+      "extra": ")",
+      "y": 0
+    },
+    {
+      "mainkey": "-",
+      "extra": "_",
+      "y": 0
+    },
+    {
+      "mainkey": "backspace",
+      "y": 0,
+      "fillend": true
+    },
+    {
+      "mainkey": "tab",
+      "y": 1,
+      "width": 3
+    },
+    {
+      "mainkey": "q",
+      "y": 1,
+      "caps": "Q"
+    },
+    {
+      "mainkey": "w",
+      "y": 1,
+      "caps": "W"
+    },
+    {
+      "mainkey": "e",
+      "y": 1,
+      "caps": "E"
+    },
+    {
+      "mainkey": "r",
+      "y": 1,
+      "caps": "R"
+    },
+    {
+      "mainkey": "r",
+      "y": 1,
+      "caps": "R"
+    },
+    {
+      "mainkey": "t",
+      "y": 1,
+      "caps": "T"
+    },
+    {
+      "mainkey": "y",
+      "y": 1,
+      "caps": "Y"
+    },
+    {
+      "mainkey": "u",
+      "y": 1,
+      "caps": "U"
+    },
+    {
+      "mainkey": "i",
+      "y": 1,
+      "caps": "I"
+    },
+    {
+      "mainkey": "o",
+      "y": 1,
+      "caps": "O"
+    },
+    {
+      "mainkey": "p",
+      "y": 1,
+      "caps": "P"
+    },
+    {
+      "mainkey": "[",
+      "extra": "{",
+      "y": 1
+    },
+    {
+      "mainkey": "]",
+      "extra": "}",
+      "y": 1
+    },
+    {
+      "mainkey": "\\",
+      "extra": "|",
+      "y": 1,
+      "fillend": true
+    },
+    {
+      "mainkey": "CapsLock",
+      "y": 2,
+      "pressedonce": true,
+      "width": 4
+    },
+    {
+      "mainkey": "a",
+      "y": 2,
+      "caps": "A"
+    },
+    {
+      "mainkey": "s",
+      "y": 2,
+      "caps": "S"
+    },
+    {
+      "mainkey": "d",
+      "y": 2,
+      "caps": "D"
+    },
+    {
+      "mainkey": "f",
+      "y": 2,
+      "caps": "F"
+    },
+    {
+      "mainkey": "g",
+      "y": 2,
+      "caps": "G"
+    },
+    {
+      "mainkey": "h",
+      "y": 2,
+      "caps": "H",
+      "menu": "<-"
+    },
+    {
+      "mainkey": "j",
+      "y": 2,
+      "caps": "J",
+      "menu": "->"
+    },
+    {
+      "mainkey": "k",
+      "y": 2,
+      "caps": "K",
+      "menu": "UP"
+    },
+    {
+      "mainkey": "l",
+      "y": 2,
+      "caps": "L",
+      "menu": "Down"
+    },
+    {
+      "mainkey": ";",
+      "y": 2,
+      "extra": ":"
+    },
+    {
+      "mainkey": "'",
+      "y": 2,
+      "extra": "\""
+    },
+    {
+      "mainkey": "enter",
+      "y": 2,
+      "fillend": true
+    },
+    {
+      "mainkey": "shift",
+      "y": 3,
+      "modkey": true,
+      "width": 5
+    },
+    {
+      "mainkey": "z",
+      "y": 3,
+      "caps": "Z"
+    },
+    {
+      "mainkey": "x",
+      "y": 3,
+      "caps": "X"
+    },
+    {
+      "mainkey": "c",
+      "y": 3,
+      "caps": "C"
+    },
+    {
+      "mainkey": "v",
+      "y": 3,
+      "caps": "V"
+    },
+    {
+      "mainkey": "b",
+      "y": 3,
+      "caps": "B"
+    },
+    {
+      "mainkey": "n",
+      "y": 3,
+      "caps": "N"
+    },
+    {
+      "mainkey": "M",
+      "y": 3,
+      "caps": "M"
+    },
+    {
+      "mainkey": ",",
+      "y": 3,
+      "extra": "<"
+    },
+    {
+      "mainkey": ".",
+      "y": 3,
+      "extra": ">"
+    },
+    {
+      "mainkey": "/",
+      "y": 3,
+      "extra": "?"
+    },
+    {
+      "mainkey": "shift",
+      "y": 3,
+      "modkey": true,
+      "fillend": true
+    },
+    {
+      "mainkey": "Ctrl",
+      "y": 4,
+      "width": 3,
+      "modkey": true
+    },
+    {
+      "mainkey": "win",
+      "y": 4,
+      "modkey": true
+    },
+    {
+      "mainkey": "alt",
+      "y": 4,
+      "modkey": true,
+      "width": 3
+    },
+    {
+      "mainkey": "space",
+      "y": 4,
+      "width": 11
+    },
+    {
+      "mainkey": "alt",
+      "y": 4,
+      "modkey": true,
+      "width": 3
+    },
+    {
+      "mainkey": "win",
+      "y": 4,
+      "modkey": true
+    },
+    {
+      "mainkey": "menu",
+      "y": 4,
+      "modkey": true
+    },
+    {
+      "mainkey": "control",
+      "y": 4,
+      "modkey": true,
+      "fillend": true
+    }
+  ]
+}

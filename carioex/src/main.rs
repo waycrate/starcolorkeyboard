@@ -1,6 +1,10 @@
 mod dispatch;
+mod keyboardlayouts;
+mod otherkeys;
 mod pangoui;
 use std::{ffi::CString, fs::File, io::Write, os::unix::prelude::AsRawFd, path::PathBuf};
+
+use keyboardlayouts::Layouts;
 
 use wayland_client::{
     protocol::{
@@ -91,12 +95,15 @@ impl State {
             &context,
             "",
             "",
-            "no",
+            Layouts::EnglishUs.to_layout_name(), // if no , it is norwegian
             "",
             None,
             xkb::KEYMAP_COMPILE_NO_FLAGS,
         )
         .expect("xkbcommon keymap panicked!");
+        for map in keymap.layouts() {
+            println!("{map}");
+        }
         State {
             running: true,
             wl_output: vec![],
@@ -189,18 +196,19 @@ impl State {
 
     fn key_press(&self) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
-        virtual_keyboard.key(1, 12, KeyState::Pressed.into());
+        virtual_keyboard.key(1, 105, KeyState::Pressed.into());
     }
+
     fn key_release(&self) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
-        virtual_keyboard.key(1, 12, KeyState::Released.into());
+        virtual_keyboard.key(1, 105, KeyState::Released.into());
     }
 }
 
-fn draw(tmp: &mut File, (_buf_x, _buf_y): (i32, i32)) {
+fn draw(tmp: &mut File, (buf_x, buf_y): (i32, i32)) {
     let mut buf = std::io::BufWriter::new(tmp);
 
-    for index in pangoui::ui(_buf_x, _buf_y).pixels() {
+    for index in pangoui::ui(buf_x, buf_y).pixels() {
         buf.write_all(&index.0).unwrap();
     }
     buf.flush().unwrap();
