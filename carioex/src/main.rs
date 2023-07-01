@@ -1,5 +1,6 @@
 mod dispatch;
 mod keyboardlayouts;
+#[allow(unused)]
 mod otherkeys;
 mod pangoui;
 use std::{ffi::CString, fs::File, io::Write, os::unix::prelude::AsRawFd, path::PathBuf};

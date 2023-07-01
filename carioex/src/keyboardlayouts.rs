@@ -23,6 +23,7 @@ pub struct LayoutKey {
     pub caps: Option<String>,
 }
 
+#[allow(unused)]
 impl LayoutKey {
     pub fn is_fillend(&self) -> bool {
         self.fillend.unwrap_or(false)
@@ -45,6 +46,7 @@ pub enum Layouts {
     //Norwegian,
 }
 
+#[allow(unused)]
 impl Layouts {
     pub fn to_layout_name(&self) -> &str {
         match self {
