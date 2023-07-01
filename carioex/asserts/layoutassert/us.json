@@ -5,319 +5,374 @@
     {
       "mainkey": "`",
       "y": 0,
-      "menu": "esc"
+      "menu": "esc",
+      "index": 1
     },
     {
       "mainkey": "1",
       "extra": "!",
-      "y": 0
+      "y": 0,
+      "index": 2
     },
     {
       "mainkey": "2",
       "extra": "@",
-      "y": 0
+      "y": 0,
+      "index": 3
     },
     {
       "mainkey": "3",
       "extra": "#",
-      "y": 0
+      "y": 0,
+      "index": 4
     },
     {
       "mainkey": "4",
       "extra": "$",
-      "y": 0
+      "y": 0,
+      "index": 5
     },
     {
       "mainkey": "5",
       "extra": "%",
-      "y": 0
+      "y": 0,
+      "index": 6
     },
     {
       "mainkey": "6",
       "extra": "^",
-      "y": 0
+      "y": 0,
+      "index": 7
     },
     {
       "mainkey": "7",
       "extra": "&",
-      "y": 0
+      "y": 0,
+      "index": 8
     },
     {
       "mainkey": "8",
       "extra": "*",
-      "y": 0
+      "y": 0,
+      "index": 9
     },
     {
       "mainkey": "9",
       "extra": "(",
-      "y": 0
+      "y": 0,
+      "index": 10
     },
     {
       "mainkey": "0",
       "extra": ")",
-      "y": 0
+      "y": 0,
+      "index": 11
     },
     {
       "mainkey": "-",
       "extra": "_",
-      "y": 0
+      "y": 0,
+      "index": 12
     },
     {
       "mainkey": "backspace",
       "y": 0,
-      "fillend": true
+      "fillend": true,
+      "index": 13
     },
     {
       "mainkey": "tab",
       "y": 1,
-      "width": 3
+      "width": 3,
+      "index": 14
     },
     {
       "mainkey": "q",
       "y": 1,
-      "caps": "Q"
+      "caps": "Q",
+      "index": 15
     },
     {
       "mainkey": "w",
       "y": 1,
-      "caps": "W"
+      "caps": "W",
+      "index": 16
     },
     {
       "mainkey": "e",
       "y": 1,
-      "caps": "E"
+      "caps": "E",
+      "index": 17
     },
     {
       "mainkey": "r",
       "y": 1,
-      "caps": "R"
-    },
-    {
-      "mainkey": "r",
-      "y": 1,
-      "caps": "R"
+      "caps": "R",
+      "index": 18
     },
     {
       "mainkey": "t",
       "y": 1,
-      "caps": "T"
+      "caps": "T",
+      "index": 19
     },
     {
       "mainkey": "y",
       "y": 1,
-      "caps": "Y"
+      "caps": "Y",
+      "index": 20
     },
     {
       "mainkey": "u",
       "y": 1,
-      "caps": "U"
+      "caps": "U",
+      "index": 21
     },
     {
       "mainkey": "i",
       "y": 1,
-      "caps": "I"
+      "caps": "I",
+      "index": 22
     },
     {
       "mainkey": "o",
       "y": 1,
-      "caps": "O"
+      "caps": "O",
+      "index": 23
     },
     {
       "mainkey": "p",
       "y": 1,
-      "caps": "P"
+      "caps": "P",
+      "index": 24
     },
     {
       "mainkey": "[",
       "extra": "{",
-      "y": 1
+      "y": 1,
+      "index": 25
     },
     {
       "mainkey": "]",
       "extra": "}",
-      "y": 1
+      "y": 1,
+      "index": 26
     },
     {
       "mainkey": "\\",
       "extra": "|",
       "y": 1,
-      "fillend": true
+      "fillend": true,
+      "index": 27
     },
     {
       "mainkey": "CapsLock",
       "y": 2,
       "pressedonce": true,
-      "width": 4
+      "width": 4,
+      "index": 28
     },
     {
       "mainkey": "a",
       "y": 2,
-      "caps": "A"
+      "caps": "A",
+      "index": 29
     },
     {
       "mainkey": "s",
       "y": 2,
-      "caps": "S"
+      "caps": "S",
+      "index": 30
     },
     {
       "mainkey": "d",
       "y": 2,
-      "caps": "D"
+      "caps": "D",
+      "index": 31
     },
     {
       "mainkey": "f",
       "y": 2,
-      "caps": "F"
+      "caps": "F",
+      "index": 32
     },
     {
       "mainkey": "g",
       "y": 2,
-      "caps": "G"
+      "caps": "G",
+      "index": 33
     },
     {
       "mainkey": "h",
       "y": 2,
       "caps": "H",
-      "menu": "<-"
+      "menu": "<-",
+      "index": 34
     },
     {
       "mainkey": "j",
       "y": 2,
       "caps": "J",
-      "menu": "->"
+      "menu": "->",
+      "index": 35
     },
     {
       "mainkey": "k",
       "y": 2,
       "caps": "K",
-      "menu": "UP"
+      "menu": "UP",
+      "index": 36
     },
     {
       "mainkey": "l",
       "y": 2,
       "caps": "L",
-      "menu": "Down"
+      "menu": "Down",
+      "index": 37
     },
     {
       "mainkey": ";",
       "y": 2,
-      "extra": ":"
+      "extra": ":",
+      "index": 38
     },
     {
       "mainkey": "'",
       "y": 2,
-      "extra": "\""
+      "extra": "\"",
+      "index": 39
     },
     {
       "mainkey": "enter",
       "y": 2,
-      "fillend": true
+      "fillend": true,
+      "index": 40
     },
     {
       "mainkey": "shift",
       "y": 3,
       "modkey": true,
-      "width": 5
+      "width": 5,
+      "index": 41
     },
     {
       "mainkey": "z",
       "y": 3,
-      "caps": "Z"
+      "caps": "Z",
+      "index": 42
     },
     {
       "mainkey": "x",
       "y": 3,
-      "caps": "X"
+      "caps": "X",
+      "index": 43
     },
     {
       "mainkey": "c",
       "y": 3,
-      "caps": "C"
+      "caps": "C",
+      "index": 44
     },
     {
       "mainkey": "v",
       "y": 3,
-      "caps": "V"
+      "caps": "V",
+      "index": 45
     },
     {
       "mainkey": "b",
       "y": 3,
-      "caps": "B"
+      "caps": "B",
+      "index": 46
     },
     {
       "mainkey": "n",
       "y": 3,
-      "caps": "N"
+      "caps": "N",
+      "index": 47
     },
     {
       "mainkey": "M",
       "y": 3,
-      "caps": "M"
+      "caps": "M",
+      "index": 48
     },
     {
       "mainkey": ",",
       "y": 3,
-      "extra": "<"
+      "extra": "<",
+      "index": 49
     },
     {
       "mainkey": ".",
       "y": 3,
-      "extra": ">"
+      "extra": ">",
+      "index": 50
     },
     {
       "mainkey": "/",
       "y": 3,
-      "extra": "?"
+      "extra": "?",
+      "index": 51
     },
     {
       "mainkey": "shift",
       "y": 3,
       "modkey": true,
-      "fillend": true
+      "fillend": true,
+      "index": 52
     },
     {
       "mainkey": "Ctrl",
       "y": 4,
       "width": 3,
-      "modkey": true
+      "modkey": true,
+      "index": 53
     },
     {
       "mainkey": "win",
       "y": 4,
-      "modkey": true
+      "modkey": true,
+      "index": 54
     },
     {
       "mainkey": "alt",
       "y": 4,
       "modkey": true,
-      "width": 3
+      "width": 3,
+      "index": 55
     },
     {
       "mainkey": "space",
       "y": 4,
-      "width": 11
+      "width": 11,
+      "index": 56
     },
     {
       "mainkey": "alt",
       "y": 4,
       "modkey": true,
-      "width": 3
+      "width": 3,
+      "index": 57
     },
     {
       "mainkey": "win",
       "y": 4,
-      "modkey": true
+      "modkey": true,
+      "index": 58
     },
     {
       "mainkey": "menu",
       "y": 4,
-      "modkey": true
+      "modkey": true,
+      "index": 59
     },
     {
       "mainkey": "control",
       "y": 4,
       "modkey": true,
-      "fillend": true
+      "fillend": true,
+      "index": 60
     }
   ]
 }

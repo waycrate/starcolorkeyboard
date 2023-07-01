@@ -196,12 +196,12 @@ impl State {
 
     fn key_press(&self) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
-        virtual_keyboard.key(1, 105, KeyState::Pressed.into());
+        virtual_keyboard.key(1, 2, KeyState::Pressed.into());
     }
 
     fn key_release(&self) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
-        virtual_keyboard.key(1, 105, KeyState::Released.into());
+        virtual_keyboard.key(1, 2, KeyState::Released.into());
     }
 }
 
