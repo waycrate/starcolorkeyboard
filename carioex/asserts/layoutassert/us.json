@@ -75,95 +75,101 @@
       "index": 12
     },
     {
+      "mainkey": "=",
+      "extra": "+",
+      "y": 0,
+      "index": 13
+    },
+    {
       "mainkey": "backspace",
       "y": 0,
       "fillend": true,
-      "index": 13
+      "index": 14
     },
     {
       "mainkey": "tab",
       "y": 1,
       "width": 3,
-      "index": 14
+      "index": 15
     },
     {
       "mainkey": "q",
       "y": 1,
       "caps": "Q",
-      "index": 15
+      "index": 16
     },
     {
       "mainkey": "w",
       "y": 1,
       "caps": "W",
-      "index": 16
+      "index": 17
     },
     {
       "mainkey": "e",
       "y": 1,
       "caps": "E",
-      "index": 17
+      "index": 18
     },
     {
       "mainkey": "r",
       "y": 1,
       "caps": "R",
-      "index": 18
+      "index": 19
     },
     {
       "mainkey": "t",
       "y": 1,
       "caps": "T",
-      "index": 19
+      "index": 20
     },
     {
       "mainkey": "y",
       "y": 1,
       "caps": "Y",
-      "index": 20
+      "index": 21
     },
     {
       "mainkey": "u",
       "y": 1,
       "caps": "U",
-      "index": 21
+      "index": 22
     },
     {
       "mainkey": "i",
       "y": 1,
       "caps": "I",
-      "index": 22
+      "index": 23
     },
     {
       "mainkey": "o",
       "y": 1,
       "caps": "O",
-      "index": 23
+      "index": 24
     },
     {
       "mainkey": "p",
       "y": 1,
       "caps": "P",
-      "index": 24
+      "index": 25
     },
     {
       "mainkey": "[",
       "extra": "{",
       "y": 1,
-      "index": 25
+      "index": 27
     },
     {
       "mainkey": "]",
       "extra": "}",
       "y": 1,
-      "index": 26
+      "index": 27
     },
     {
       "mainkey": "\\",
       "extra": "|",
       "y": 1,
       "fillend": true,
-      "index": 27
+      "index": 28
     },
     {
       "mainkey": "CapsLock",

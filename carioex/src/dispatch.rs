@@ -251,16 +251,35 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
         _conn: &Connection,
         _qhandle: &QueueHandle<Self>,
     ) {
-        if let wl_pointer::Event::Button { state, .. } = event {
-            match state {
+        match event {
+            wl_pointer::Event::Button { state, .. } => match state {
                 WEnum::Value(wl_pointer::ButtonState::Pressed) => {
-                    wlstate.key_press();
+                    if let Some(key) = wlstate.get_key() {
+                        wlstate.key_press(key);
+                    }
                 }
                 WEnum::Value(wl_pointer::ButtonState::Released) => {
-                    wlstate.key_release();
+                    if let Some(key) = wlstate.get_key() {
+                        wlstate.key_release(key);
+                    }
                 }
                 _ => {}
+            },
+            wl_pointer::Event::Enter {
+                surface_x,
+                surface_y,
+                ..
+            } => {
+                wlstate.position = (surface_x, surface_y);
             }
+            wl_pointer::Event::Motion {
+                surface_x,
+                surface_y,
+                ..
+            } => {
+                wlstate.position = (surface_x, surface_y);
+            }
+            _ => {}
         }
     }
 }

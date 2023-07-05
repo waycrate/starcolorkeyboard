@@ -31,6 +31,8 @@ use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::{
 
 use xkbcommon::xkb;
 
+use pangoui::PangoUi;
+
 fn main() {
     let conn = Connection::connect_to_env().unwrap();
 
@@ -56,9 +58,11 @@ fn main() {
         );
         event_queue.blocking_dispatch(&mut state).unwrap();
     }
+
     if state.layer_shell.is_some() && state.wm_base.is_some() {
         state.init_virtual_keyboard(&qhandle);
-        state.set_buffer(state.get_size_from_display(0), &qhandle);
+        state.pangoui.set_size(state.get_size_from_display(0));
+        state.set_buffer(&qhandle);
         state.init_layer_surface(
             &qhandle,
             state.get_size_from_display(0),
@@ -86,6 +90,8 @@ struct State {
     virtual_keyboard_manager: Option<zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1>,
     virtual_keyboard: Option<zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1>,
     xkb_state: xkb::State,
+    pangoui: PangoUi,
+    position: (f64, f64),
 }
 
 impl State {
@@ -120,12 +126,15 @@ impl State {
             virtual_keyboard_manager: None,
             virtual_keyboard: None,
             xkb_state: xkb::State::new(&keymap),
+            pangoui: PangoUi::default(),
+            position: (0.0, 0.0),
         }
     }
-    fn set_buffer(&mut self, (width, height): (i32, i32), qh: &QueueHandle<Self>) {
+    fn set_buffer(&mut self, qh: &QueueHandle<Self>) {
         let shm = self.wl_shm.as_ref().unwrap();
         let mut file = tempfile::tempfile().unwrap();
-        draw(&mut file, (width, height));
+        let (width, height) = self.pangoui.get_size();
+        self.draw(&mut file);
         let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
         let buffer = pool.create_buffer(
             0,
@@ -195,22 +204,26 @@ impl State {
         self.virtual_keyboard = Some(virtual_keyboard);
     }
 
-    fn key_press(&self) {
+    fn key_press(&self, key: u32) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
-        virtual_keyboard.key(1, 2, KeyState::Pressed.into());
+        virtual_keyboard.key(1, key, KeyState::Pressed.into());
     }
 
-    fn key_release(&self) {
+    fn key_release(&self, key: u32) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
-        virtual_keyboard.key(1, 2, KeyState::Released.into());
+        virtual_keyboard.key(1, key, KeyState::Released.into());
     }
-}
 
-fn draw(tmp: &mut File, (buf_x, buf_y): (i32, i32)) {
-    let mut buf = std::io::BufWriter::new(tmp);
+    fn draw(&self, tmp: &mut File) {
+        let mut buf = std::io::BufWriter::new(tmp);
 
-    for index in pangoui::ui(buf_x, buf_y).pixels() {
-        buf.write_all(&index.0).unwrap();
+        for index in self.pangoui.ui().pixels() {
+            buf.write_all(&index.0).unwrap();
+        }
+        buf.flush().unwrap();
     }
-    buf.flush().unwrap();
+
+    fn get_key(&self) -> Option<u32> {
+        self.pangoui.get_key(self.position)
+    }
 }
