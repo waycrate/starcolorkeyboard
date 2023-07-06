@@ -9,10 +9,11 @@ fn draw_number_keyboard(content: &Context, width: i32, height: i32, font_size: i
     assert!(width > height);
 
     let step = height as f64 / 3.0;
-    let x_1 = width as f64 - 3.0 * step;
-    let x_2 = width as f64 - 2.0 * step;
-    let x_3 = width as f64 - step;
-    let x_4 = width as f64;
+    let x_1 = width as f64 - 4.0 * step;
+    let x_2 = width as f64 - 3.0 * step;
+    let x_3 = width as f64 - 2.0 * step;
+    let x_4 = width as f64 - step;
+    let x_5 = width as f64;
 
     let y_1 = 0.0;
     let y_2 = step;
@@ -30,15 +31,17 @@ fn draw_number_keyboard(content: &Context, width: i32, height: i32, font_size: i
     content.line_to(x_3, y_4);
     content.move_to(x_4, y_1);
     content.line_to(x_4, y_4);
+    content.move_to(x_5, y_1);
+    content.line_to(x_5, y_4);
 
     content.move_to(x_1, y_1);
-    content.line_to(x_4, y_1);
+    content.line_to(x_5, y_1);
     content.move_to(x_1, y_2);
-    content.line_to(x_4, y_2);
+    content.line_to(x_5, y_2);
     content.move_to(x_1, y_3);
-    content.line_to(x_4, y_3);
+    content.line_to(x_5, y_3);
     content.move_to(x_1, y_4);
-    content.line_to(x_4, y_4);
+    content.line_to(x_5, y_4);
 
     content.stroke().unwrap();
 
@@ -102,6 +105,12 @@ fn draw_number_keyboard(content: &Context, width: i32, height: i32, font_size: i
     content.move_to(x_3 + font_adjustx, y_3 + font_adjusty);
     pangocairo::show_layout(content, &pangolayout);
     content.restore().unwrap();
+
+    pangolayout.set_text("0");
+    content.save().unwrap();
+    content.move_to(x_4 + font_adjustx, y_2 + font_adjusty);
+    pangocairo::show_layout(content, &pangolayout);
+    content.restore().unwrap();
 }
 
 #[derive(Debug, Default)]
@@ -141,10 +150,17 @@ impl PangoUi {
     pub fn get_key(&self, (pos_x, pos_y): (f64, f64)) -> Option<u32> {
         let (pos_x, pos_y) = (pos_x as i32, pos_y as i32);
         let step = self.height / 3;
-        let x_1 = self.width - 3 * step;
+        let x_1 = self.width - 4 * step;
+        let x_4 = self.width - step;
 
         if pos_x < x_1 {
             return None;
+        } else if pos_x > x_4 {
+            if pos_y / step == 1 {
+                return Some(11);
+            } else {
+                return None;
+            }
         }
         let abx = (pos_x - x_1) / step;
         let aby = pos_y / step;
