@@ -1,14 +1,25 @@
 use cairo::Context;
 
-fn draw_unit_key(
-    pangolayout: &pango::Layout,
-    content: &Context,
+struct DrawInfo<'a> {
     step: f64,
     width: i32,
     font_size: i32,
     line: i32,
-    text: &str,
+    text: &'a str,
     start_x: f64,
+}
+
+fn draw_unit_key(
+    pangolayout: &pango::Layout,
+    content: &Context,
+    DrawInfo {
+        step,
+        width,
+        font_size,
+        line,
+        text,
+        start_x,
+    }: DrawInfo,
 ) {
     let end_x = step * width as f64 + start_x;
     let start_y = step * line as f64;
@@ -29,7 +40,7 @@ fn draw_unit_key(
     let font_adjusty = step / 2.0 - font_size as f64;
     content.save().unwrap();
     content.move_to(start_x + font_adjusty, start_y);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 }
 
@@ -41,13 +52,15 @@ pub fn draw_main_keyboard(
 ) {
     let step = height / 4;
     draw_unit_key(
-        &pangolayout,
+        pangolayout,
         content,
-        step as f64,
-        2,
-        font_size,
-        0,
-        "Tab",
-        0.0,
+        DrawInfo {
+            step: step as f64,
+            width: 2,
+            font_size,
+            line: 0,
+            text: "Tab",
+            start_x: 0.0,
+        },
     );
 }

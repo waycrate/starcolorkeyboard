@@ -57,60 +57,60 @@ pub fn draw_number_keyboard(
     pangolayout.set_text("1");
     content.save().unwrap();
     content.move_to(x_1 + font_adjustx, y_1 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
     pangolayout.set_text("2");
     content.save().unwrap();
     content.move_to(x_2 + font_adjustx, y_1 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
     pangolayout.set_text("3");
     content.save().unwrap();
     content.move_to(x_3 + font_adjustx, y_1 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
     pangolayout.set_text("4");
     content.save().unwrap();
     content.move_to(x_1 + font_adjustx, y_2 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
     pangolayout.set_text("5");
     content.save().unwrap();
     content.move_to(x_2 + font_adjustx, y_2 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
     pangolayout.set_text("6");
     content.save().unwrap();
     content.move_to(x_3 + font_adjustx, y_2 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
     pangolayout.set_text("7");
     content.save().unwrap();
     content.move_to(x_1 + font_adjustx, y_3 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
     pangolayout.set_text("8");
     content.save().unwrap();
     content.move_to(x_2 + font_adjustx, y_3 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
     pangolayout.set_text("9");
     content.save().unwrap();
     content.move_to(x_3 + font_adjustx, y_3 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
     pangolayout.set_text("0");
     content.save().unwrap();
     content.move_to(x_4 + font_adjustx, y_2 + font_adjusty);
-    pangocairo::show_layout(content, &pangolayout);
+    pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 }
