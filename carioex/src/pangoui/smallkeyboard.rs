@@ -7,7 +7,13 @@ pub fn find_keycode_from_smallkeyboard((pos_x, pos_y): (i32, i32), start_x: i32,
     code as u32
 }
 
-pub fn draw_number_keyboard(content: &Context, width: i32, height: i32, font_size: i32) {
+pub fn draw_number_keyboard(
+    content: &Context,
+    pangolayout: &pango::Layout,
+    width: i32,
+    height: i32,
+    font_size: i32,
+) {
     // NOTE: here require width > height
     assert!(width > height);
 
@@ -47,13 +53,6 @@ pub fn draw_number_keyboard(content: &Context, width: i32, height: i32, font_siz
     content.line_to(x_5, y_4);
 
     content.stroke().unwrap();
-
-    let pangolayout = pangocairo::create_layout(content);
-    let mut desc = pango::FontDescription::new();
-    desc.set_family("Sans");
-    desc.set_weight(pango::Weight::Bold);
-    desc.set_size(font_size * pango::SCALE);
-    pangolayout.set_font_description(Some(&desc));
 
     pangolayout.set_text("1");
     content.save().unwrap();

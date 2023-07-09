@@ -33,14 +33,13 @@ fn draw_unit_key(
     content.restore().unwrap();
 }
 
-pub fn draw_main_keyboard(content: &Context, height: i32, font_size: i32) {
+pub fn draw_main_keyboard(
+    content: &Context,
+    pangolayout: &pango::Layout,
+    height: i32,
+    font_size: i32,
+) {
     let step = height / 4;
-    let pangolayout = pangocairo::create_layout(content);
-    let mut desc = pango::FontDescription::new();
-    desc.set_family("Sans");
-    desc.set_weight(pango::Weight::Bold);
-    desc.set_size(font_size * pango::SCALE);
-    pangolayout.set_font_description(Some(&desc));
     draw_unit_key(
         &pangolayout,
         content,

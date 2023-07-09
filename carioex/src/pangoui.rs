@@ -20,9 +20,16 @@ impl PangoUi {
         let cr = cairo::Context::new(&surface).unwrap();
         cr.set_source_rgb(1_f64, 1_f64, 1_f64);
         cr.paint().unwrap();
+        let font_size = 27;
+        let pangolayout = pangocairo::create_layout(&cr);
+        let mut desc = pango::FontDescription::new();
+        desc.set_family("Sans");
+        desc.set_weight(pango::Weight::Bold);
+        desc.set_size(font_size * pango::SCALE);
+        pangolayout.set_font_description(Some(&desc));
 
-        draw_number_keyboard(&cr, width, height, 27);
-        draw_main_keyboard(&cr, height, 27);
+        draw_number_keyboard(&cr, &pangolayout, width, height, 27);
+        draw_main_keyboard(&cr, &pangolayout, height, 27);
 
         use std::io::Cursor;
         let mut buff = Cursor::new(Vec::new());
