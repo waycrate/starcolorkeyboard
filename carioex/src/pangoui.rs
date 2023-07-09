@@ -1,7 +1,10 @@
+mod mainkeyboard;
 mod smallkeyboard;
 //use std::f64::consts::PI;
 
 use smallkeyboard::{draw_number_keyboard, find_keycode_from_smallkeyboard};
+
+use crate::pangoui::mainkeyboard::draw_main_keyboard;
 
 #[derive(Debug, Default)]
 pub struct PangoUi {
@@ -19,6 +22,7 @@ impl PangoUi {
         cr.paint().unwrap();
 
         draw_number_keyboard(&cr, width, height, 27);
+        draw_main_keyboard(&cr, height, 27);
 
         use std::io::Cursor;
         let mut buff = Cursor::new(Vec::new());
