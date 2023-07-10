@@ -1,5 +1,66 @@
 use cairo::Context;
 
+use serde::{Deserialize, Serialize};
+
+use std::sync::OnceLock;
+
+static MAIN_LAYOUT_INFO: OnceLock<Vec<Vec<MainLayout>>> = OnceLock::new();
+
+const MAIN_LAYOUT: &str = include_str!("../../asserts/mainkeylayout/enUS.json");
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct MainLayout {
+    text: String,
+    cap: Option<String>,
+    width: usize,
+    line: usize,
+    start_pos: usize,
+    key: usize,
+}
+
+// TODO: cap and shift
+#[allow(unused)]
+enum KeyType {
+    Normal,
+    Cap,
+}
+
+impl MainLayout {
+    fn get_info(&self, keytype: KeyType, step: f64, font_size: i32) -> DrawInfo<'_> {
+        match keytype {
+            KeyType::Normal => DrawInfo {
+                step,
+                width: self.width as i32,
+                font_size,
+                line: self.line as i32,
+                text: self.text.as_str(),
+                start_pos: self.start_pos as i32,
+            },
+            KeyType::Cap => DrawInfo {
+                step,
+                width: self.width as i32,
+                font_size,
+                line: self.line as i32,
+                text: match &self.cap {
+                    Some(text) => text,
+                    None => "",
+                },
+                start_pos: self.start_pos as i32,
+            },
+        }
+    }
+}
+
+fn get_main_layout() -> Vec<Vec<MainLayout>> {
+    if let Some(layout_info) = MAIN_LAYOUT_INFO.get() {
+        layout_info.clone()
+    } else {
+        let layout: Vec<Vec<MainLayout>> = serde_json::from_str(MAIN_LAYOUT).unwrap();
+        MAIN_LAYOUT_INFO.set(layout.clone()).expect("Cannot set it");
+        layout
+    }
+}
+
 struct DrawInfo<'a> {
     step: f64,
     width: i32,
@@ -52,136 +113,14 @@ pub fn draw_main_keyboard(
     font_size: i32,
 ) {
     let step = height / 4;
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 2,
-            font_size,
-            line: 0,
-            text: "Tab",
-            start_pos: 0,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "q",
-            start_pos: 2,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "w",
-            start_pos: 3,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "e",
-            start_pos: 4,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "r",
-            start_pos: 5,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "t",
-            start_pos: 6,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "y",
-            start_pos: 7,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "u",
-            start_pos: 8,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "i",
-            start_pos: 9,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "o",
-            start_pos: 10,
-        },
-    );
-    draw_unit_key(
-        pangolayout,
-        content,
-        DrawInfo {
-            step: step as f64,
-            width: 1,
-            font_size,
-            line: 0,
-            text: "p",
-            start_pos: 11,
-        },
-    );
+
+    for oneline in get_main_layout().iter() {
+        for map in oneline.iter() {
+            draw_unit_key(
+                pangolayout,
+                content,
+                map.get_info(KeyType::Normal, step as f64, font_size),
+            );
+        }
+    }
 }

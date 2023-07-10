@@ -1,0 +1,83 @@
+[
+  [
+    {
+      "text": "Tab",
+      "width": 2,
+      "line": 0,
+      "start_pos": 0,
+      "key": 0
+    },
+    {
+      "text": "q",
+      "cap": "Q",
+      "width": 1,
+      "line": 0,
+      "start_pos": 2,
+      "key": 0
+    },
+    {
+      "text": "w",
+      "cap": "W",
+      "width": 1,
+      "line": 0,
+      "start_pos": 3,
+      "key": 0
+    },
+    {
+      "text": "e",
+      "cap": "E",
+      "width": 1,
+      "line": 0,
+      "start_pos": 4,
+      "key": 0
+    },
+    {
+      "text": "r",
+      "cap": "R",
+      "width": 1,
+      "line": 0,
+      "start_pos": 5,
+      "key": 0
+    },
+    {
+      "text": "t",
+      "cap": "T",
+      "width": 1,
+      "line": 0,
+      "start_pos": 6,
+      "key": 0
+    },
+    {
+      "text": "u",
+      "cap": "U",
+      "width": 1,
+      "line": 0,
+      "start_pos": 7,
+      "key": 0
+    },
+    {
+      "text": "i",
+      "cap": "I",
+      "width": 1,
+      "line": 0,
+      "start_pos": 8,
+      "key": 0
+    },
+    {
+      "text": "o",
+      "cap": "O",
+      "width": 1,
+      "line": 0,
+      "start_pos": 9,
+      "key": 0
+    },
+    {
+      "text": "p",
+      "cap": "P",
+      "width": 1,
+      "line": 0,
+      "start_pos": 10,
+      "key": 0
+    }
+  ]
+]
