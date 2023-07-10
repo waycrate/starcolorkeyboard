@@ -6,6 +6,8 @@ use smallkeyboard::{draw_number_keyboard, find_keycode_from_smallkeyboard};
 
 use crate::pangoui::mainkeyboard::draw_main_keyboard;
 
+use self::mainkeyboard::find_keycode_from_mainkeyboard;
+
 #[derive(Debug, Default)]
 pub struct PangoUi {
     width: i32,
@@ -55,7 +57,8 @@ impl PangoUi {
         let x_4 = self.width - step;
 
         if pos_x < x_1 {
-            return None;
+            let step = self.height / 4;
+            return find_keycode_from_mainkeyboard((pos_x, pos_y), step);
         } else if pos_x > x_4 {
             if pos_y / step == 1 {
                 return Some(11);

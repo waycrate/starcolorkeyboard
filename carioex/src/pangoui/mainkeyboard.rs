@@ -12,6 +12,7 @@ const MAIN_LAYOUT: &str = include_str!("../../asserts/mainkeylayout/enUS.json");
 struct MainLayout {
     text: String,
     cap: Option<String>,
+    shift: Option<String>,
     width: usize,
     line: usize,
     start_pos: usize,
@@ -23,6 +24,7 @@ struct MainLayout {
 enum KeyType {
     Normal,
     Cap,
+    Shift,
 }
 
 impl MainLayout {
@@ -43,7 +45,18 @@ impl MainLayout {
                 line: self.line as i32,
                 text: match &self.cap {
                     Some(text) => text,
-                    None => "",
+                    None => self.text.as_str(),
+                },
+                start_pos: self.start_pos as i32,
+            },
+            KeyType::Shift => DrawInfo {
+                step,
+                width: self.width as i32,
+                font_size,
+                line: self.line as i32,
+                text: match &self.shift {
+                    Some(text) => text,
+                    None => self.text.as_str(),
                 },
                 start_pos: self.start_pos as i32,
             },
@@ -123,4 +136,24 @@ pub fn draw_main_keyboard(
             );
         }
     }
+}
+
+pub fn find_keycode_from_mainkeyboard((pos_x, pos_y): (i32, i32), step: i32) -> Option<u32> {
+    let main_layout = get_main_layout();
+    let aby = pos_y / step;
+    if aby > main_layout.len() as i32 {
+        return None;
+    }
+    for map in main_layout[aby as usize].iter() {
+        let MainLayout {
+            width,
+            start_pos,
+            key,
+            ..
+        } = map;
+        if pos_x > *start_pos as i32 * step && pos_x < (*start_pos as i32 + *width as i32) * step {
+            return Some(*key as u32);
+        }
+    }
+    None
 }

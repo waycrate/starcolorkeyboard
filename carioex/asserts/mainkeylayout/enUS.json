@@ -5,7 +5,7 @@
       "width": 2,
       "line": 0,
       "start_pos": 0,
-      "key": 0
+      "key": 15
     },
     {
       "text": "q",
@@ -13,7 +13,7 @@
       "width": 1,
       "line": 0,
       "start_pos": 2,
-      "key": 0
+      "key": 16
     },
     {
       "text": "w",
@@ -21,7 +21,7 @@
       "width": 1,
       "line": 0,
       "start_pos": 3,
-      "key": 0
+      "key": 17
     },
     {
       "text": "e",
@@ -29,7 +29,7 @@
       "width": 1,
       "line": 0,
       "start_pos": 4,
-      "key": 0
+      "key": 18
     },
     {
       "text": "r",
@@ -37,7 +37,7 @@
       "width": 1,
       "line": 0,
       "start_pos": 5,
-      "key": 0
+      "key": 19
     },
     {
       "text": "t",
@@ -45,39 +45,77 @@
       "width": 1,
       "line": 0,
       "start_pos": 6,
-      "key": 0
+      "key": 20
+    },
+    {
+      "text": "y",
+      "cap": "Y",
+      "width": 1,
+      "line": 0,
+      "start_pos": 7,
+      "key": 21
     },
     {
       "text": "u",
       "cap": "U",
       "width": 1,
       "line": 0,
-      "start_pos": 7,
-      "key": 0
+      "start_pos": 8,
+      "key": 22
     },
     {
       "text": "i",
       "cap": "I",
       "width": 1,
       "line": 0,
-      "start_pos": 8,
-      "key": 0
+      "start_pos": 9,
+      "key": 23
     },
     {
       "text": "o",
       "cap": "O",
       "width": 1,
       "line": 0,
-      "start_pos": 9,
-      "key": 0
+      "start_pos": 10,
+      "key": 24
     },
     {
       "text": "p",
       "cap": "P",
       "width": 1,
       "line": 0,
-      "start_pos": 10,
-      "key": 0
+      "start_pos": 11,
+      "key": 25
+    },
+    {
+      "text": "[",
+      "shift": "{",
+      "width": 1,
+      "line": 0,
+      "start_pos": 12,
+      "key": 26
+    },
+    {
+      "text": "]",
+      "shift": "}",
+      "width": 1,
+      "line": 0,
+      "start_pos": 13,
+      "key": 27
+    },
+    {
+      "text": "Enter",
+      "width": 2,
+      "line": 0,
+      "start_pos": 14,
+      "key": 28
+    },
+    {
+      "text": "  Backspace",
+      "width": 3,
+      "line": 0,
+      "start_pos": 16,
+      "key": 14
     }
   ]
 ]

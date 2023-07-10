@@ -40,7 +40,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             if interface == wl_output::WlOutput::interface().name {
                 //&& state.wl_output.is_none() {
                 let wl_output = registry.bind::<wl_output::WlOutput, _, _>(name, version, qh, ());
-                println!("{wl_output:?}");
+                //println!("{wl_output:?}");
                 state.wl_output.push(wl_output);
             } else if interface == zwlr_layer_shell_v1::ZwlrLayerShellV1::interface().name {
                 let wl_layer = registry.bind::<zwlr_layer_shell_v1::ZwlrLayerShellV1, _, _>(
@@ -83,15 +83,15 @@ impl Dispatch<wl_output::WlOutput, ()> for State {
     fn event(
         _state: &mut Self,
         _proxy: &wl_output::WlOutput,
-        event: <wl_output::WlOutput as Proxy>::Event,
+        _event: <wl_output::WlOutput as Proxy>::Event,
         _data: &(),
         _conn: &Connection,
         _qhandle: &QueueHandle<Self>,
     ) {
-        if let wl_output::Event::Mode { width, height, .. } = event {
-            //state.wl_size.push((width, height));
-            println!("{width}, {height}");
-        }
+        //if let wl_output::Event::Mode { width, height, .. } = _event {
+        //    //state.wl_size.push((width, height));
+        //    println!("{width}, {height}");
+        //}
     }
 }
 impl Dispatch<ZxdgOutputV1, ()> for State {
