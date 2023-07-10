@@ -218,7 +218,15 @@ impl State {
         let mut buf = std::io::BufWriter::new(tmp);
 
         for index in self.pangoui.ui().pixels() {
-            buf.write_all(&index.0).unwrap();
+            let [mut r, mut g, mut b, mut a] = index.0;
+            // NOTE: transparent
+            if r != 0 && r != 0 && b != 0 {
+                a = 50;
+                r = 50;
+                g = 50;
+                b = 50;
+            }
+            buf.write_all(&[r, g, b, a]).unwrap();
         }
         buf.flush().unwrap();
     }
