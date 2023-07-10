@@ -108,9 +108,6 @@ impl State {
             xkb::KEYMAP_COMPILE_NO_FLAGS,
         )
         .expect("xkbcommon keymap panicked!");
-        for map in keymap.layouts() {
-            println!("{map}");
-        }
         State {
             running: true,
             wl_output: vec![],
@@ -161,7 +158,7 @@ impl State {
         let layer = self.layer_shell.as_ref().unwrap().get_layer_surface(
             self.base_surface.as_ref().unwrap(),
             output,
-            Layer::Top,
+            Layer::Overlay,
             "precure".to_string(),
             qh,
             (),
