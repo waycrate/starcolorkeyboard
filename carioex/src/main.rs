@@ -220,7 +220,7 @@ impl State {
         for index in self.pangoui.ui().pixels() {
             let [mut r, mut g, mut b, mut a] = index.0;
             // NOTE: transparent
-            if r != 0 && r != 0 && b != 0 {
+            if r != 0 && g != 0 && b != 0 {
                 a = 50;
                 r = 50;
                 g = 50;
