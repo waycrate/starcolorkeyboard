@@ -92,6 +92,7 @@ struct State {
     xkb_state: xkb::State,
     pangoui: PangoUi,
     position: (f64, f64),
+    touch_pos: (f64, f64),
 }
 
 impl State {
@@ -125,6 +126,7 @@ impl State {
             xkb_state: xkb::State::new(&keymap),
             pangoui: PangoUi::default(),
             position: (0.0, 0.0),
+            touch_pos: (0.0, 0.0),
         }
     }
     fn set_buffer(&mut self, qh: &QueueHandle<Self>) {
@@ -228,7 +230,11 @@ impl State {
         buf.flush().unwrap();
     }
 
-    fn get_key(&self) -> Option<u32> {
+    fn get_key_point(&self) -> Option<u32> {
         self.pangoui.get_key(self.position)
+    }
+
+    fn get_key_touch(&self) -> Option<u32> {
+        self.pangoui.get_key(self.touch_pos)
     }
 }

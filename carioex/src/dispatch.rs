@@ -3,7 +3,7 @@ use super::State;
 use wayland_client::{
     protocol::{
         wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_pointer, wl_registry, wl_seat, wl_shm,
-        wl_shm_pool, wl_surface,
+        wl_shm_pool, wl_surface, wl_touch,
     },
     Connection, Dispatch, Proxy, QueueHandle, WEnum,
 };
@@ -219,6 +219,9 @@ impl Dispatch<wl_seat::WlSeat, ()> for State {
             if capabilities.contains(wl_seat::Capability::Pointer) {
                 seat.get_pointer(qh, ());
             }
+            if capabilities.contains(wl_seat::Capability::Touch) {
+                seat.get_touch(qh, ());
+            }
         }
     }
 }
@@ -254,12 +257,12 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
         match event {
             wl_pointer::Event::Button { state, .. } => match state {
                 WEnum::Value(wl_pointer::ButtonState::Pressed) => {
-                    if let Some(key) = wlstate.get_key() {
+                    if let Some(key) = wlstate.get_key_point() {
                         wlstate.key_press(key);
                     }
                 }
                 WEnum::Value(wl_pointer::ButtonState::Released) => {
-                    if let Some(key) = wlstate.get_key() {
+                    if let Some(key) = wlstate.get_key_point() {
                         wlstate.key_release(key);
                     }
                 }
@@ -283,6 +286,33 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
         }
     }
 }
+
+impl Dispatch<wl_touch::WlTouch, ()> for State {
+    fn event(
+        wlstate: &mut Self,
+        _proxy: &wl_touch::WlTouch,
+        event: <wl_touch::WlTouch as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+        match event {
+            wl_touch::Event::Down { x, y, .. } => {
+                wlstate.touch_pos = (x, y);
+                if let Some(key) = wlstate.get_key_touch() {
+                    wlstate.key_press(key);
+                }
+            }
+            wl_touch::Event::Up { .. } => {
+                if let Some(key) = wlstate.get_key_touch() {
+                    wlstate.key_press(key);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
 impl Dispatch<zwlr_layer_shell_v1::ZwlrLayerShellV1, ()> for State {
     fn event(
         _state: &mut Self,
