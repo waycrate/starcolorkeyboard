@@ -214,13 +214,101 @@
       "start_pos": 27,
       "key": 41
     },
-
     {
       "text": "   Enter",
       "width": 6,
       "line": 1,
       "start_pos": 29,
       "key": 28
+    }
+  ],
+  [
+    {
+      "text": "shift",
+      "width": 6,
+      "line": 2,
+      "start_pos": 0,
+      "key": 42
+    },
+    {
+      "text": "z",
+      "width": 2,
+      "line": 2,
+      "start_pos": 6,
+      "key": 44
+    },
+    {
+      "text": "x",
+      "width": 2,
+      "line": 2,
+      "start_pos": 8,
+      "key": 45
+    },
+    {
+      "text": "c",
+      "width": 2,
+      "line": 2,
+      "start_pos": 10,
+      "key": 46
+    },
+    {
+      "text": "v",
+      "width": 2,
+      "line": 2,
+      "start_pos": 12,
+      "key": 47
+    },
+    {
+      "text": "b",
+      "width": 2,
+      "line": 2,
+      "start_pos": 14,
+      "key": 48
+    },
+    {
+      "text": "n",
+      "width": 2,
+      "line": 2,
+      "start_pos": 16,
+      "key": 49
+    },
+    {
+      "text": "m",
+      "width": 2,
+      "line": 2,
+      "start_pos": 18,
+      "key": 50
+    },
+    {
+      "text": ",",
+      "width": 2,
+      "shift": "<",
+      "line": 2,
+      "start_pos": 20,
+      "key": 51
+    },
+    {
+      "text": ".",
+      "width": 2,
+      "shift": ">",
+      "line": 2,
+      "start_pos": 22,
+      "key": 52
+    },
+    {
+      "text": "/",
+      "width": 2,
+      "shift": "?",
+      "line": 2,
+      "start_pos": 24,
+      "key": 53
+    },
+    {
+      "text": "Shift",
+      "width": 5,
+      "line": 2,
+      "start_pos": 30,
+      "key": 53
     }
   ]
 ]
