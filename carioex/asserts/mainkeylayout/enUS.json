@@ -304,11 +304,76 @@
       "key": 53
     },
     {
+      "text": "Up",
+      "width": 2,
+      "line": 2,
+      "start_pos": 27,
+      "key": 103
+    },
+    {
       "text": "Shift",
       "width": 5,
       "line": 2,
       "start_pos": 30,
-      "key": 53
+      "key": 54
+    }
+  ],
+  [
+    {
+      "text": "Ctrl",
+      "width": 3,
+      "line": 3,
+      "start_pos": 0,
+      "key": 29
+    },
+    {
+      "text": "Alt",
+      "width": 2,
+      "line": 3,
+      "start_pos": 3,
+      "key": 56
+    },
+    {
+      "text": "                Space            ",
+      "width": 15,
+      "line": 3,
+      "start_pos": 5,
+      "key": 57
+    },
+    {
+      "text": "Alt",
+      "width": 2,
+      "line": 3,
+      "start_pos": 20,
+      "key": 100
+    },
+    {
+      "text": "Ctrl",
+      "width": 3,
+      "line": 3,
+      "start_pos": 22,
+      "key": 97
+    },
+    {
+      "text": "<-",
+      "width": 2,
+      "line": 3,
+      "start_pos": 25,
+      "key": 105
+    },
+    {
+      "text": "Dn",
+      "width": 2,
+      "line": 3,
+      "start_pos": 27,
+      "key": 108
+    },
+    {
+      "text": "->",
+      "width": 2,
+      "line": 3,
+      "start_pos": 29,
+      "key": 106
     }
   ]
 ]
