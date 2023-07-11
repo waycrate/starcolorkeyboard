@@ -95,8 +95,8 @@ fn draw_unit_key(
         start_pos,
     }: DrawInfo,
 ) {
-    let start_x = step * start_pos as f64;
-    let end_x = step * width as f64 + start_x;
+    let start_x = step * start_pos as f64 / 2.0;
+    let end_x = step * width as f64 / 2.0 + start_x;
     let start_y = step * line as f64;
     let end_y = step * (line + 1) as f64;
     content.move_to(start_x, start_y);
@@ -141,7 +141,7 @@ pub fn draw_main_keyboard(
 pub fn find_keycode_from_mainkeyboard((pos_x, pos_y): (i32, i32), step: i32) -> Option<u32> {
     let main_layout = get_main_layout();
     let aby = pos_y / step;
-    if aby > main_layout.len() as i32 {
+    if aby >= main_layout.len() as i32 {
         return None;
     }
     for map in main_layout[aby as usize].iter() {
@@ -151,7 +151,9 @@ pub fn find_keycode_from_mainkeyboard((pos_x, pos_y): (i32, i32), step: i32) -> 
             key,
             ..
         } = map;
-        if pos_x > *start_pos as i32 * step && pos_x < (*start_pos as i32 + *width as i32) * step {
+        if pos_x > *start_pos as i32 * step / 2
+            && pos_x < (*start_pos as i32 + *width as i32) * step / 2
+        {
             return Some(*key as u32);
         }
     }
