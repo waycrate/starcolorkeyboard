@@ -2,8 +2,8 @@ use super::State;
 
 use wayland_client::{
     protocol::{
-        wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_pointer, wl_registry, wl_seat, wl_shm,
-        wl_shm_pool, wl_surface, wl_touch,
+        wl_buffer, wl_callback, wl_compositor, wl_keyboard, wl_output, wl_pointer, wl_registry,
+        wl_seat, wl_shm, wl_shm_pool, wl_surface, wl_touch,
     },
     Connection, Dispatch, Proxy, QueueHandle, WEnum,
 };
@@ -245,6 +245,18 @@ impl Dispatch<wl_keyboard::WlKeyboard, ()> for State {
     }
 }
 
+impl Dispatch<wl_callback::WlCallback, ()> for State {
+    fn event(
+        _state: &mut Self,
+        _proxy: &wl_callback::WlCallback,
+        _event: <wl_callback::WlCallback as Proxy>::Event,
+        _data: &(),
+        _conn: &Connection,
+        _qhandle: &QueueHandle<Self>,
+    ) {
+    }
+}
+
 impl Dispatch<wl_pointer::WlPointer, ()> for State {
     fn event(
         wlstate: &mut Self,
@@ -252,7 +264,7 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
         event: <wl_pointer::WlPointer as Proxy>::Event,
         _data: &(),
         _conn: &Connection,
-        _qhandle: &QueueHandle<Self>,
+        qh: &QueueHandle<Self>,
     ) {
         match event {
             wl_pointer::Event::Button { state, .. } => match state {
@@ -263,7 +275,9 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
                 }
                 WEnum::Value(wl_pointer::ButtonState::Released) => {
                     if let Some(key) = wlstate.get_key_point() {
-                        wlstate.key_release(key);
+                        if let Some(key_mode) = wlstate.key_release(key) {
+                            wlstate.update_map(qh, key_mode);
+                        }
                     }
                 }
                 _ => {}

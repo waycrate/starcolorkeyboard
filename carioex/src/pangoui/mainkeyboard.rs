@@ -4,6 +4,10 @@ use serde::{Deserialize, Serialize};
 
 use std::sync::OnceLock;
 
+use crate::KeyModifierType;
+
+use super::contain_mode;
+
 static MAIN_LAYOUT_INFO: OnceLock<Vec<Vec<MainLayout>>> = OnceLock::new();
 
 const MAIN_LAYOUT: &str = include_str!("../../asserts/mainkeylayout/enUS.json");
@@ -21,6 +25,7 @@ struct MainLayout {
 
 // TODO: cap and shift
 #[allow(unused)]
+#[derive(Clone, Copy)]
 enum KeyType {
     Normal,
     Cap,
@@ -56,11 +61,22 @@ impl MainLayout {
                 line: self.line as i32,
                 text: match &self.shift {
                     Some(text) => text,
-                    None => self.text.as_str(),
+                    None => match &self.cap {
+                        Some(text) => text,
+                        None => self.text.as_str(),
+                    },
                 },
                 start_pos: self.start_pos as i32,
             },
         }
+    }
+}
+
+fn get_keytype(key_type: KeyModifierType) -> KeyType {
+    if contain_mode(key_type, KeyModifierType::Shift) {
+        KeyType::Shift
+    } else {
+        KeyType::Normal
     }
 }
 
@@ -119,20 +135,22 @@ fn draw_unit_key(
     content.restore().unwrap();
 }
 
-pub fn draw_main_keyboard(
+pub(crate) fn draw_main_keyboard(
     content: &Context,
     pangolayout: &pango::Layout,
     height: i32,
     font_size: i32,
+    key_type: KeyModifierType,
 ) {
     let step = height / 4;
 
+    let keytype = get_keytype(key_type);
     for oneline in get_main_layout().iter() {
         for map in oneline.iter() {
             draw_unit_key(
                 pangolayout,
                 content,
-                map.get_info(KeyType::Normal, step as f64, font_size),
+                map.get_info(keytype, step as f64, font_size),
             );
         }
     }
