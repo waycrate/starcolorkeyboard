@@ -8,7 +8,7 @@ use crate::pangoui::mainkeyboard::draw_main_keyboard;
 
 use self::mainkeyboard::find_keycode_from_mainkeyboard;
 
-use bitflags::bitflags;
+use super::KeyModifierType;
 
 #[derive(Debug, Default)]
 pub struct PangoUi {
@@ -16,22 +16,11 @@ pub struct PangoUi {
     height: i32,
 }
 
-bitflags! {
-    #[allow(unused)]
-    #[derive(Debug)]
-    struct KeyModifierType : u32 {
-        const NoMod = 0;
-        const Shift = 1;
-        const CapsLock = 2;
-        const Ctrl = 4;
-        const Alt = 8;
-        const Super = 64;
-        const AltGr = 128;
-    }
-}
-
 impl PangoUi {
-    pub fn ui(&self) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
+    pub(crate) fn ui(
+        &self,
+        _key_type: KeyModifierType,
+    ) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
         let height = self.height;
         let width = self.width;
         let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, width, height).unwrap();
@@ -43,6 +32,7 @@ impl PangoUi {
         let mut desc = pango::FontDescription::new();
         desc.set_family("Sans");
         desc.set_weight(pango::Weight::Bold);
+
         desc.set_size(font_size * pango::SCALE);
         pangolayout.set_font_description(Some(&desc));
 

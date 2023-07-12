@@ -33,6 +33,21 @@ use xkbcommon::xkb;
 
 use pangoui::PangoUi;
 
+use bitflags::bitflags;
+
+bitflags! {
+    #[allow(unused)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    struct KeyModifierType : u32 {
+        const NoMod = 0;
+        const Shift = 1;
+        const CapsLock = 2;
+        const Ctrl = 4;
+        const Alt = 8;
+        const Super = 64;
+        const AltGr = 128;
+    }
+}
 fn main() {
     let conn = Connection::connect_to_env().unwrap();
 
@@ -84,6 +99,7 @@ struct State {
     base_surface: Option<wl_surface::WlSurface>,
     layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
     layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
+    tempfile: File,
     buffer: Option<wl_buffer::WlBuffer>,
     wm_base: Option<xdg_wm_base::XdgWmBase>,
     xdg_output_manager: Option<zxdg_output_manager_v1::ZxdgOutputManagerV1>,
@@ -118,6 +134,7 @@ impl State {
             base_surface: None,
             layer_shell: None,
             layer_surface: None,
+            tempfile: tempfile::tempfile().unwrap(),
             buffer: None,
             wm_base: None,
             xdg_output_manager: None,
@@ -131,10 +148,10 @@ impl State {
     }
 
     fn set_buffer(&mut self, qh: &QueueHandle<Self>) {
-        let shm = self.wl_shm.as_ref().unwrap();
-        let mut file = tempfile::tempfile().unwrap();
         let (width, height) = self.pangoui.get_size();
-        self.draw(&mut file);
+        self.draw(KeyModifierType::NoMod);
+        let shm = self.wl_shm.as_ref().unwrap();
+        let file = &self.tempfile;
         let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
         let buffer = pool.create_buffer(
             0,
@@ -204,7 +221,7 @@ impl State {
         self.virtual_keyboard = Some(virtual_keyboard);
     }
 
-    fn key_press(&self, key: u32) {
+    fn key_press(&mut self, key: u32) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
         //virtual_keyboard.modifiers(1, 0, 0, 0);
         virtual_keyboard.key(1, key, KeyState::Pressed.into());
@@ -215,10 +232,11 @@ impl State {
         virtual_keyboard.key(1, key, KeyState::Released.into());
     }
 
-    fn draw(&self, tmp: &mut File) {
+    fn draw(&mut self, key_type: KeyModifierType) {
+        let tmp = &self.tempfile;
         let mut buf = std::io::BufWriter::new(tmp);
 
-        for index in self.pangoui.ui().pixels() {
+        for index in self.pangoui.ui(key_type).pixels() {
             let [mut r, mut g, mut b, mut a] = index.0;
             // NOTE: transparent
             if r == 255 && g == 255 && b == 255 {
