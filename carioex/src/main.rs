@@ -129,6 +129,7 @@ impl State {
             touch_pos: (0.0, 0.0),
         }
     }
+
     fn set_buffer(&mut self, qh: &QueueHandle<Self>) {
         let shm = self.wl_shm.as_ref().unwrap();
         let mut file = tempfile::tempfile().unwrap();
@@ -205,6 +206,7 @@ impl State {
 
     fn key_press(&self, key: u32) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
+        //virtual_keyboard.modifiers(1, 0, 0, 0);
         virtual_keyboard.key(1, key, KeyState::Pressed.into());
     }
 
@@ -219,7 +221,7 @@ impl State {
         for index in self.pangoui.ui().pixels() {
             let [mut r, mut g, mut b, mut a] = index.0;
             // NOTE: transparent
-            if r != 0 && g != 0 && b != 0 {
+            if r == 255 && g == 255 && b == 255 {
                 a = 50;
                 r = 50;
                 g = 50;

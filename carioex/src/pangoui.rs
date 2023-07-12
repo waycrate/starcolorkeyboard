@@ -8,10 +8,26 @@ use crate::pangoui::mainkeyboard::draw_main_keyboard;
 
 use self::mainkeyboard::find_keycode_from_mainkeyboard;
 
+use bitflags::bitflags;
+
 #[derive(Debug, Default)]
 pub struct PangoUi {
     width: i32,
     height: i32,
+}
+
+bitflags! {
+    #[allow(unused)]
+    #[derive(Debug)]
+    struct KeyModifierType : u32 {
+        const NoMod = 0;
+        const Shift = 1;
+        const CapsLock = 2;
+        const Ctrl = 4;
+        const Alt = 8;
+        const Super = 64;
+        const AltGr = 128;
+    }
 }
 
 impl PangoUi {
@@ -41,6 +57,7 @@ impl PangoUi {
             .unwrap()
             .to_rgba8()
     }
+
     pub fn set_size(&mut self, (width, height): (i32, i32)) {
         self.width = width;
         self.height = height;
