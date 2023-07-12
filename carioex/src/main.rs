@@ -107,6 +107,7 @@ struct State {
     virtual_keyboard: Option<zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1>,
     xkb_state: xkb::State,
     pangoui: PangoUi,
+    keymode: KeyModifierType,
     position: (f64, f64),
     touch_pos: (f64, f64),
 }
@@ -141,6 +142,7 @@ impl State {
             virtual_keyboard: None,
             xkb_state: xkb::State::new(&keymap),
             pangoui: PangoUi::default(),
+            keymode: KeyModifierType::NoMod,
             position: (0.0, 0.0),
             touch_pos: (0.0, 0.0),
         }
@@ -220,18 +222,25 @@ impl State {
         self.virtual_keyboard = Some(virtual_keyboard);
     }
 
-    fn key_press(&mut self, key: u32) {
+    fn key_press(&self, key: u32) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
         //virtual_keyboard.modifiers(1, 0, 0, 0);
         virtual_keyboard.key(1, key, KeyState::Pressed.into());
     }
 
     #[must_use]
-    fn key_release(&self, key: u32) -> Option<KeyModifierType> {
+    fn key_release(&mut self, key: u32) -> Option<KeyModifierType> {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
         virtual_keyboard.key(1, key, KeyState::Released.into());
         if key == otherkeys::SHIFT_LEFT {
-            Some(KeyModifierType::Shift)
+            let mod_pre = self.keymode;
+            self.keymode ^= KeyModifierType::Shift;
+            if self.keymode == mod_pre {
+                None
+            } else {
+                virtual_keyboard.modifiers(self.keymode.bits(), 0, 0, 0);
+                Some(self.keymode)
+            }
         } else {
             None
         }

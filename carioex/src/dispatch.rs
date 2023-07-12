@@ -1,5 +1,3 @@
-use crate::KeyModifierType;
-
 use super::State;
 
 use wayland_client::{
@@ -277,8 +275,8 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
                 }
                 WEnum::Value(wl_pointer::ButtonState::Released) => {
                     if let Some(key) = wlstate.get_key_point() {
-                        if let Some(KeyModifierType::Shift) = wlstate.key_release(key) {
-                            wlstate.update_map(qh, KeyModifierType::Shift);
+                        if let Some(key_mode) = wlstate.key_release(key) {
+                            wlstate.update_map(qh, key_mode);
                         }
                     }
                 }
