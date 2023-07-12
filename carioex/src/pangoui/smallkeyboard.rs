@@ -1,5 +1,12 @@
 use cairo::Context;
 
+use super::contain_mode;
+use crate::KeyModifierType;
+
+fn contain_shift(key_type: KeyModifierType) -> bool {
+    contain_mode(key_type, KeyModifierType::Shift)
+}
+
 pub fn find_keycode_from_smallkeyboard((pos_x, pos_y): (i32, i32), start_x: i32, step: i32) -> u32 {
     let abx = (pos_x - start_x) / step;
     let aby = pos_y / step;
@@ -7,12 +14,13 @@ pub fn find_keycode_from_smallkeyboard((pos_x, pos_y): (i32, i32), start_x: i32,
     code as u32
 }
 
-pub fn draw_number_keyboard(
+pub(super) fn draw_number_keyboard(
     content: &Context,
     pangolayout: &pango::Layout,
     width: i32,
     height: i32,
     font_size: i32,
+    key_type: KeyModifierType,
 ) {
     // NOTE: here require width > height
     assert!(width > height);
@@ -54,61 +62,103 @@ pub fn draw_number_keyboard(
 
     content.stroke().unwrap();
 
-    pangolayout.set_text("1");
+    let shiftmode = contain_shift(key_type);
+
+    if shiftmode {
+        pangolayout.set_text("!");
+    } else {
+        pangolayout.set_text("1");
+    }
     content.save().unwrap();
     content.move_to(x_1 + font_adjustx, y_1 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
-    pangolayout.set_text("2");
+    if shiftmode {
+        pangolayout.set_text("@");
+    } else {
+        pangolayout.set_text("2");
+    }
     content.save().unwrap();
     content.move_to(x_2 + font_adjustx, y_1 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
-    pangolayout.set_text("3");
+    if shiftmode {
+        pangolayout.set_text("#");
+    } else {
+        pangolayout.set_text("3");
+    }
     content.save().unwrap();
     content.move_to(x_3 + font_adjustx, y_1 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
-    pangolayout.set_text("4");
+    if shiftmode {
+        pangolayout.set_text("$");
+    } else {
+        pangolayout.set_text("4");
+    }
     content.save().unwrap();
     content.move_to(x_1 + font_adjustx, y_2 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
-    pangolayout.set_text("5");
+    if shiftmode {
+        pangolayout.set_text("%");
+    } else {
+        pangolayout.set_text("5");
+    }
     content.save().unwrap();
     content.move_to(x_2 + font_adjustx, y_2 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
-    pangolayout.set_text("6");
+    if shiftmode {
+        pangolayout.set_text("^");
+    } else {
+        pangolayout.set_text("6");
+    }
     content.save().unwrap();
     content.move_to(x_3 + font_adjustx, y_2 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
-    pangolayout.set_text("7");
+    if shiftmode {
+        pangolayout.set_text("&");
+    } else {
+        pangolayout.set_text("7");
+    }
     content.save().unwrap();
     content.move_to(x_1 + font_adjustx, y_3 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
-    pangolayout.set_text("8");
+    if shiftmode {
+        pangolayout.set_text("*");
+    } else {
+        pangolayout.set_text("8");
+    }
     content.save().unwrap();
     content.move_to(x_2 + font_adjustx, y_3 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
-    pangolayout.set_text("9");
+    if shiftmode {
+        pangolayout.set_text("(");
+    } else {
+        pangolayout.set_text("9");
+    }
     content.save().unwrap();
     content.move_to(x_3 + font_adjustx, y_3 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 
-    pangolayout.set_text("0");
+    if shiftmode {
+        pangolayout.set_text(")");
+    } else {
+        pangolayout.set_text("0");
+    }
     content.save().unwrap();
     content.move_to(x_4 + font_adjustx, y_2 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);

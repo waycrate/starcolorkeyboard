@@ -16,10 +16,14 @@ pub struct PangoUi {
     height: i32,
 }
 
+fn contain_mode(key_type: KeyModifierType, mode: KeyModifierType) -> bool {
+    key_type == key_type | mode
+}
+
 impl PangoUi {
     pub(crate) fn ui(
         &self,
-        _key_type: KeyModifierType,
+        key_type: KeyModifierType,
     ) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
         let height = self.height;
         let width = self.width;
@@ -31,17 +35,13 @@ impl PangoUi {
         let pangolayout = pangocairo::create_layout(&cr);
         let mut desc = pango::FontDescription::new();
         desc.set_family("Sans");
-        if _key_type == KeyModifierType::Shift {
-            desc.set_weight(pango::Weight::Bold);
-        } else {
-            desc.set_weight(pango::Weight::Light);
-        }
+        desc.set_weight(pango::Weight::Bold);
 
         desc.set_size(font_size * pango::SCALE);
         pangolayout.set_font_description(Some(&desc));
 
-        draw_number_keyboard(&cr, &pangolayout, width, height, 27);
-        draw_main_keyboard(&cr, &pangolayout, height, 27);
+        draw_number_keyboard(&cr, &pangolayout, width, height, 27, key_type);
+        draw_main_keyboard(&cr, &pangolayout, height, 27, key_type);
 
         use std::io::Cursor;
         let mut buff = Cursor::new(Vec::new());
