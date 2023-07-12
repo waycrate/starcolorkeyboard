@@ -48,6 +48,7 @@ bitflags! {
         const AltGr = 128;
     }
 }
+
 fn main() {
     let conn = Connection::connect_to_env().unwrap();
 
@@ -77,7 +78,7 @@ fn main() {
     if state.layer_shell.is_some() && state.wm_base.is_some() {
         state.init_virtual_keyboard(&qhandle);
         state.pangoui.set_size(state.get_size_from_display(0));
-        state.set_buffer(&qhandle);
+        state.set_buffer(&qhandle, KeyModifierType::NoMod);
         state.init_layer_surface(
             &qhandle,
             state.get_size_from_display(0),
@@ -99,7 +100,6 @@ struct State {
     base_surface: Option<wl_surface::WlSurface>,
     layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
     layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
-    tempfile: File,
     buffer: Option<wl_buffer::WlBuffer>,
     wm_base: Option<xdg_wm_base::XdgWmBase>,
     xdg_output_manager: Option<zxdg_output_manager_v1::ZxdgOutputManagerV1>,
@@ -134,7 +134,6 @@ impl State {
             base_surface: None,
             layer_shell: None,
             layer_surface: None,
-            tempfile: tempfile::tempfile().unwrap(),
             buffer: None,
             wm_base: None,
             xdg_output_manager: None,
@@ -147,11 +146,11 @@ impl State {
         }
     }
 
-    fn set_buffer(&mut self, qh: &QueueHandle<Self>) {
+    fn set_buffer(&mut self, qh: &QueueHandle<Self>, key_type: KeyModifierType) {
         let (width, height) = self.pangoui.get_size();
-        self.draw(KeyModifierType::NoMod);
+        let file = tempfile::tempfile().unwrap();
+        self.draw(key_type, &file);
         let shm = self.wl_shm.as_ref().unwrap();
-        let file = &self.tempfile;
         let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
         let buffer = pool.create_buffer(
             0,
@@ -227,13 +226,33 @@ impl State {
         virtual_keyboard.key(1, key, KeyState::Pressed.into());
     }
 
-    fn key_release(&self, key: u32) {
+    #[must_use]
+    fn key_release(&self, key: u32) -> Option<KeyModifierType> {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
         virtual_keyboard.key(1, key, KeyState::Released.into());
+        if key == otherkeys::SHIFT_LEFT {
+            Some(KeyModifierType::Shift)
+        } else {
+            None
+        }
     }
 
-    fn draw(&mut self, key_type: KeyModifierType) {
-        let tmp = &self.tempfile;
+    fn update_map(&mut self, qh: &QueueHandle<Self>, key_type: KeyModifierType) {
+        let (width, height) = self.pangoui.get_size();
+        self.base_surface
+            .as_ref()
+            .unwrap()
+            .damage_buffer(0, 0, width, height);
+        self.set_buffer(qh, key_type);
+        self.base_surface.as_ref().unwrap().frame(qh, ());
+        self.base_surface
+            .as_ref()
+            .unwrap()
+            .attach(self.buffer.as_ref(), 0, 0);
+        self.base_surface.as_ref().unwrap().commit();
+    }
+
+    fn draw(&mut self, key_type: KeyModifierType, tmp: &File) {
         let mut buf = std::io::BufWriter::new(tmp);
 
         for index in self.pangoui.ui(key_type).pixels() {

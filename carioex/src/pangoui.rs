@@ -31,7 +31,11 @@ impl PangoUi {
         let pangolayout = pangocairo::create_layout(&cr);
         let mut desc = pango::FontDescription::new();
         desc.set_family("Sans");
-        desc.set_weight(pango::Weight::Bold);
+        if _key_type == KeyModifierType::Shift {
+            desc.set_weight(pango::Weight::Bold);
+        } else {
+            desc.set_weight(pango::Weight::Light);
+        }
 
         desc.set_size(font_size * pango::SCALE);
         pangolayout.set_font_description(Some(&desc));
