@@ -24,7 +24,6 @@ struct MainLayout {
 }
 
 // TODO: cap and shift
-#[allow(unused)]
 #[derive(Clone, Copy)]
 enum KeyType {
     Normal,
@@ -32,8 +31,18 @@ enum KeyType {
     Shift,
 }
 
+fn contain_mode_special(keymode: KeyModifierType, key_type: KeyModifierType) -> bool {
+    if key_type == KeyModifierType::NoMod {
+        return false;
+    }
+    contain_mode(keymode, key_type)
+}
+
 impl MainLayout {
-    fn get_info(&self, keytype: KeyType, step: f64, font_size: i32) -> DrawInfo<'_> {
+    fn get_info(&self, keymode: KeyModifierType, step: f64, font_size: i32) -> DrawInfo<'_> {
+        let layout_keytype: KeyModifierType = self.key.into();
+        let locked = contain_mode_special(keymode, layout_keytype);
+        let keytype = keymode.into();
         match keytype {
             KeyType::Normal => DrawInfo {
                 step,
@@ -42,6 +51,7 @@ impl MainLayout {
                 line: self.line as i32,
                 text: self.text.as_str(),
                 start_pos: self.start_pos as i32,
+                locked,
             },
             KeyType::Cap => DrawInfo {
                 step,
@@ -53,6 +63,7 @@ impl MainLayout {
                     None => self.text.as_str(),
                 },
                 start_pos: self.start_pos as i32,
+                locked,
             },
             KeyType::Shift => DrawInfo {
                 step,
@@ -67,6 +78,7 @@ impl MainLayout {
                     },
                 },
                 start_pos: self.start_pos as i32,
+                locked,
             },
         }
     }
@@ -101,6 +113,7 @@ struct DrawInfo<'a> {
     line: i32,
     text: &'a str,
     start_pos: i32,
+    locked: bool,
 }
 
 fn draw_unit_key(
@@ -113,12 +126,19 @@ fn draw_unit_key(
         line,
         text,
         start_pos,
+        locked,
     }: DrawInfo,
 ) {
     let start_x = step * start_pos as f64 / 2.0;
     let end_x = step * width as f64 / 2.0 + start_x;
     let start_y = step * line as f64;
     let end_y = step * (line + 1) as f64;
+    if locked {
+        content.rectangle(start_x, start_y, end_x - start_x, end_y - start_y);
+        content.set_source_rgb(0.5, 0.5, 0.5);
+        content.fill().unwrap();
+        content.set_source_rgb(0_f64, 0_f64, 0_f64);
+    }
     content.move_to(start_x, start_y);
     content.line_to(start_x, end_y);
     content.move_to(end_x, start_y);
@@ -148,13 +168,12 @@ pub(crate) fn draw_main_keyboard(
 ) {
     let step = height / 4;
 
-    let keytype: KeyType = key_type.into();
     for oneline in get_main_layout().iter() {
         for map in oneline.iter() {
             draw_unit_key(
                 pangolayout,
                 content,
-                map.get_info(keytype, step as f64, font_size),
+                map.get_info(key_type, step as f64, font_size),
             );
         }
     }
