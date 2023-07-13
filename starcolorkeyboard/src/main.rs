@@ -94,8 +94,8 @@ fn main() {
             &qhandle,
             (),
         );
-        event_queue.blocking_dispatch(&mut state).unwrap();
     }
+    event_queue.blocking_dispatch(&mut state).unwrap();
 
     if state.layer_shell.is_some() && state.wm_base.is_some() {
         state.init_virtual_keyboard(&qhandle);
