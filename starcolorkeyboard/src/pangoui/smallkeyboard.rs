@@ -8,8 +8,9 @@ fn contain_shift(key_type: KeyModifierType) -> bool {
 }
 
 pub fn find_keycode_from_smallkeyboard((pos_x, pos_y): (i32, i32), start_x: i32, step: i32) -> u32 {
+    let exclude_zone = RIGHT_RELAY / 2.0;
     let abx = (pos_x - start_x) / step;
-    let aby = pos_y / step;
+    let aby = (pos_y - exclude_zone as i32) / step;
     let code = aby * 3 + abx + 2;
     code as u32
 }
@@ -61,16 +62,18 @@ pub(super) fn draw_number_keyboard(
     // NOTE: here require width > height
     assert!(width - RIGHT_RELAY as i32 > height);
 
-    let step = height as f64 / 3.0;
+    let exclude_zone = RIGHT_RELAY / 2.0;
+
+    let step = (height as f64 - exclude_zone) / 3.0;
     let x_1 = width as f64 - RIGHT_RELAY - 4.0 * step;
     let x_2 = width as f64 - RIGHT_RELAY - 3.0 * step;
     let x_3 = width as f64 - RIGHT_RELAY - 2.0 * step;
     let x_4 = width as f64 - RIGHT_RELAY - step;
     let x_5 = width as f64 - RIGHT_RELAY;
 
-    let y_1 = 0.0;
-    let y_2 = step;
-    let y_3 = 2.0 * step;
+    let y_1 = 0.0 + exclude_zone;
+    let y_2 = step + exclude_zone;
+    let y_3 = 2.0 * step + exclude_zone;
     let y_4 = height as f64;
 
     let font_adjusty = step / 2.0 - font_size as f64;

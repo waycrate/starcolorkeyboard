@@ -191,8 +191,8 @@ impl State {
     fn min_keyboard(&self) {
         let layer_surf = self.layer_surface.as_ref().unwrap();
         if self.is_min {
-            layer_surf.set_size(0, 50);
-            layer_surf.set_exclusive_zone(50);
+            layer_surf.set_size(0, 40);
+            layer_surf.set_exclusive_zone(40);
         } else {
             let (_, height) = self.pangoui.get_size();
             layer_surf.set_size(0, height as u32);

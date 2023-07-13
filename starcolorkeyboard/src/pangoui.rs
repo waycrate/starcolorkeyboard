@@ -10,7 +10,7 @@ use self::mainkeyboard::find_keycode_from_mainkeyboard;
 
 use super::KeyModifierType;
 
-const RIGHT_RELAY: f64 = 100_f64;
+const RIGHT_RELAY: f64 = 80_f64;
 
 #[derive(Debug, Default)]
 pub struct PangoUi {
@@ -33,7 +33,7 @@ impl PangoUi {
         let cr = cairo::Context::new(&surface).unwrap();
         cr.set_source_rgb(1_f64, 1_f64, 1_f64);
         cr.paint().unwrap();
-        let font_size = 27;
+        let font_size = 23;
         let pangolayout = pangocairo::create_layout(&cr);
         let mut desc = pango::FontDescription::new();
         desc.set_family("Sans");
@@ -65,13 +65,14 @@ impl PangoUi {
 
     pub fn get_key(&self, (pos_x, pos_y): (f64, f64)) -> Option<u32> {
         let (pos_x, pos_y) = (pos_x as i32, pos_y as i32);
-        let step = self.height / 3;
+        let exclude_zone = RIGHT_RELAY / 2.0;
+        let step = (self.height - exclude_zone as i32) / 3;
         let x_1 = self.width - RIGHT_RELAY as i32 - 4 * step;
         let x_4 = self.width - RIGHT_RELAY as i32 - step;
         let x_5 = self.width - RIGHT_RELAY as i32;
 
         if pos_x < x_1 {
-            let step = self.height / 4;
+            let step = (self.height - exclude_zone as i32) / 4;
             return find_keycode_from_mainkeyboard((pos_x, pos_y), step);
         } else if pos_x > x_4 {
             if pos_x > x_5 {
@@ -86,7 +87,7 @@ impl PangoUi {
                 }
                 return None;
             }
-            match pos_y / step {
+            match (pos_y - exclude_zone as i32) / step {
                 0 => return Some(12),
                 1 => return Some(11),
                 2 => return Some(13),

@@ -6,7 +6,7 @@ use std::sync::OnceLock;
 
 use crate::KeyModifierType;
 
-use super::contain_mode;
+use super::{contain_mode, RIGHT_RELAY};
 
 static MAIN_LAYOUT_INFO: OnceLock<Vec<Vec<MainLayout>>> = OnceLock::new();
 
@@ -129,10 +129,11 @@ fn draw_unit_key(
         locked,
     }: DrawInfo,
 ) {
+    let exclude_zone = RIGHT_RELAY / 2.0;
     let start_x = step * start_pos as f64 / 2.0;
     let end_x = step * width as f64 / 2.0 + start_x;
-    let start_y = step * line as f64;
-    let end_y = step * (line + 1) as f64;
+    let start_y = step * line as f64 + exclude_zone;
+    let end_y = step * (line + 1) as f64 + exclude_zone;
     if locked {
         content.rectangle(start_x, start_y, end_x - start_x, end_y - start_y);
         content.set_source_rgb(0.5, 0.5, 0.5);
@@ -166,7 +167,8 @@ pub(crate) fn draw_main_keyboard(
     font_size: i32,
     key_type: KeyModifierType,
 ) {
-    let step = height / 4;
+    let exclude_zone = RIGHT_RELAY / 2.0;
+    let step = (height - exclude_zone as i32) / 4;
 
     for oneline in get_main_layout().iter() {
         for map in oneline.iter() {
@@ -180,8 +182,9 @@ pub(crate) fn draw_main_keyboard(
 }
 
 pub fn find_keycode_from_mainkeyboard((pos_x, pos_y): (i32, i32), step: i32) -> Option<u32> {
+    let exclude_zone = RIGHT_RELAY / 2.0;
     let main_layout = get_main_layout();
-    let aby = pos_y / step;
+    let aby = (pos_y - exclude_zone as i32) / step;
     if aby >= main_layout.len() as i32 {
         return None;
     }
