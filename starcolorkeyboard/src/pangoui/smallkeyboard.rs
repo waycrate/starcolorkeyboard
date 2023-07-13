@@ -3,6 +3,8 @@ use cairo::Context;
 use super::contain_mode;
 use crate::KeyModifierType;
 
+const RIGHT_RELAY: f64 = 50_f64;
+
 fn contain_shift(key_type: KeyModifierType) -> bool {
     contain_mode(key_type, KeyModifierType::Shift)
 }
@@ -23,14 +25,14 @@ pub(super) fn draw_number_keyboard(
     key_type: KeyModifierType,
 ) {
     // NOTE: here require width > height
-    assert!(width > height);
+    assert!(width - RIGHT_RELAY as i32 > height);
 
     let step = height as f64 / 3.0;
-    let x_1 = width as f64 - 4.0 * step;
-    let x_2 = width as f64 - 3.0 * step;
-    let x_3 = width as f64 - 2.0 * step;
-    let x_4 = width as f64 - step;
-    let x_5 = width as f64;
+    let x_1 = width as f64 - RIGHT_RELAY - 4.0 * step;
+    let x_2 = width as f64 - RIGHT_RELAY - 3.0 * step;
+    let x_3 = width as f64 - RIGHT_RELAY - 2.0 * step;
+    let x_4 = width as f64 - RIGHT_RELAY - step;
+    let x_5 = width as f64 - RIGHT_RELAY;
 
     let y_1 = 0.0;
     let y_2 = step;
