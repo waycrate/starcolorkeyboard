@@ -130,6 +130,7 @@ struct State {
     keymode: KeyModifierType,
     position: (f64, f64),
     touch_pos: (f64, f64),
+    is_min: bool,
 }
 
 impl State {
@@ -165,6 +166,7 @@ impl State {
             keymode: KeyModifierType::NoMod,
             position: (0.0, 0.0),
             touch_pos: (0.0, 0.0),
+            is_min: false,
         }
     }
 
@@ -184,6 +186,20 @@ impl State {
             (),
         );
         self.buffer = Some(buffer);
+    }
+
+    fn min_keyboard(&self) {
+        let layer_surf = self.layer_surface.as_ref().unwrap();
+        if self.is_min {
+            layer_surf.set_size(0, 50);
+            layer_surf.set_exclusive_zone(50);
+        } else {
+            let (_, height) = self.pangoui.get_size();
+            layer_surf.set_size(0, height as u32);
+            layer_surf.set_exclusive_zone(height);
+        }
+
+        self.base_surface.as_ref().unwrap().commit();
     }
 
     fn get_size_from_display(&self, index: usize) -> (i32, i32) {

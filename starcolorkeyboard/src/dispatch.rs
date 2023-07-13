@@ -284,6 +284,9 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
                         if otherkeys::is_unique_key(key) {
                             if key == otherkeys::CLOSE_KEYBOARD {
                                 wlstate.running = false;
+                            } else if key == otherkeys::MIN_KEYBOARD {
+                                wlstate.is_min = !wlstate.is_min;
+                                wlstate.min_keyboard();
                             }
                             return;
                         }
