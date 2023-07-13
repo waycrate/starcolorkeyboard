@@ -121,10 +121,17 @@
   ],
   [
     {
-      "text": "CapsLock",
-      "width": 5,
+      "text": "ESC",
+      "width": 2,
       "line": 1,
       "start_pos": 0,
+      "key": 1
+    },
+    {
+      "text": "Caps",
+      "width": 3,
+      "line": 1,
+      "start_pos": 2,
       "key": 58
     },
     {
