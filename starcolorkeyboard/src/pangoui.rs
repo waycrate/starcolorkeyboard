@@ -2,9 +2,10 @@ mod mainkeyboard;
 mod smallkeyboard;
 //use std::f64::consts::PI;
 
+use cairo::Context;
 use smallkeyboard::{draw_number_keyboard, find_keycode_from_smallkeyboard};
 
-use crate::{otherkeys, pangoui::mainkeyboard::draw_main_keyboard};
+use crate::{consts::KEYBOARD_TITLE, otherkeys, pangoui::mainkeyboard::draw_main_keyboard};
 
 use self::mainkeyboard::find_keycode_from_mainkeyboard;
 
@@ -20,6 +21,16 @@ pub struct PangoUi {
 
 fn contain_mode(key_type: KeyModifierType, mode: KeyModifierType) -> bool {
     key_type == key_type | mode
+}
+
+fn draw_title(context: &Context, pangolayout: &pango::Layout, width: i32) {
+    pangolayout.set_text(KEYBOARD_TITLE);
+    let (textwidth, _) = pangolayout.pixel_size();
+    let start_pos = (width - textwidth) / 2;
+    context.save().unwrap();
+    context.move_to(start_pos as f64, 0.0);
+    pangocairo::show_layout(context, pangolayout);
+    context.restore().unwrap()
 }
 
 impl PangoUi {
@@ -44,6 +55,7 @@ impl PangoUi {
 
         draw_number_keyboard(&cr, &pangolayout, width, height, 27, key_type);
         draw_main_keyboard(&cr, &pangolayout, height, 27, key_type);
+        draw_title(&cr, &pangolayout, width);
 
         use std::io::Cursor;
         let mut buff = Cursor::new(Vec::new());
