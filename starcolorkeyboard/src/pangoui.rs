@@ -4,7 +4,7 @@ mod smallkeyboard;
 
 use smallkeyboard::{draw_number_keyboard, find_keycode_from_smallkeyboard};
 
-use crate::pangoui::mainkeyboard::draw_main_keyboard;
+use crate::{otherkeys, pangoui::mainkeyboard::draw_main_keyboard};
 
 use self::mainkeyboard::find_keycode_from_mainkeyboard;
 
@@ -75,6 +75,15 @@ impl PangoUi {
             return find_keycode_from_mainkeyboard((pos_x, pos_y), step);
         } else if pos_x > x_4 {
             if pos_x > x_5 {
+                if pos_y < RIGHT_RELAY as i32 {
+                    let step_right = RIGHT_RELAY as i32 / 2;
+                    let right_w = pos_x - x_5;
+                    if right_w / step_right == 0 {
+                        return Some(otherkeys::MIN_KEYBOARD);
+                    } else {
+                        return Some(otherkeys::CLOSE_KEYBOARD);
+                    }
+                }
                 return None;
             }
             match pos_y / step {

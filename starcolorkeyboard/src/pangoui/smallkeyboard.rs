@@ -14,6 +14,42 @@ pub fn find_keycode_from_smallkeyboard((pos_x, pos_y): (i32, i32), start_x: i32,
     code as u32
 }
 
+fn draw_extra_btn(content: &Context, pangolayout: &pango::Layout, width: i32, font_size: i32) {
+    let step = RIGHT_RELAY / 2.0;
+    let x_1 = width as f64 - RIGHT_RELAY;
+    let x_2 = width as f64 - step;
+    let x_3 = width as f64;
+    let y_1 = 0.0;
+    let y_2 = step;
+    content.set_source_rgb(0.0, 0.0, 0.0);
+    content.move_to(x_1, y_1);
+    content.line_to(x_1, y_2);
+    content.move_to(x_2, y_1);
+    content.line_to(x_2, y_2);
+    content.move_to(x_3, y_1);
+    content.line_to(x_3, y_2);
+
+    content.move_to(x_1, y_1);
+    content.line_to(x_3, y_1);
+    content.move_to(x_1, y_2);
+    content.line_to(x_3, y_2);
+
+    content.stroke().unwrap();
+
+    let font_adjustx = step / 2.0 - font_size as f64 / 2.0;
+    pangolayout.set_text("-");
+    content.save().unwrap();
+    content.move_to(x_1 + font_adjustx, y_1);
+    pangocairo::show_layout(content, pangolayout);
+    content.restore().unwrap();
+
+    pangolayout.set_text("x");
+    content.save().unwrap();
+    content.move_to(x_2 + font_adjustx, y_1);
+    pangocairo::show_layout(content, pangolayout);
+    content.restore().unwrap();
+}
+
 pub(super) fn draw_number_keyboard(
     content: &Context,
     pangolayout: &pango::Layout,
@@ -183,4 +219,6 @@ pub(super) fn draw_number_keyboard(
     content.move_to(x_4 + font_adjustx, y_3 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
+
+    draw_extra_btn(content, pangolayout, width, font_size);
 }

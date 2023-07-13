@@ -1,3 +1,5 @@
+use crate::otherkeys;
+
 use super::State;
 
 use wayland_client::{
@@ -272,11 +274,19 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
             wl_pointer::Event::Button { state, .. } => match state {
                 WEnum::Value(wl_pointer::ButtonState::Pressed) => {
                     if let Some(key) = wlstate.get_key_point() {
-                        wlstate.key_press(key);
+                        if !otherkeys::is_unique_key(key) {
+                            wlstate.key_press(key);
+                        }
                     }
                 }
                 WEnum::Value(wl_pointer::ButtonState::Released) => {
                     if let Some(key) = wlstate.get_key_point() {
+                        if otherkeys::is_unique_key(key) {
+                            if key == otherkeys::CLOSE_KEYBOARD {
+                                wlstate.running = false;
+                            }
+                            return;
+                        }
                         if let Some(key_mode) = wlstate.key_release(key) {
                             wlstate.update_map(qh, key_mode);
                         }
