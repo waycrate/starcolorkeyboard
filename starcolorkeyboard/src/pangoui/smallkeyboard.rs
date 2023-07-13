@@ -12,7 +12,7 @@ fn contain_shift(key_type: KeyModifierType) -> bool {
 pub fn find_keycode_from_smallkeyboard((pos_x, pos_y): (i32, i32), start_x: i32, step: i32) -> u32 {
     let exclude_zone = EXCULDE_ZONE_TOP as i32;
     let abx = (pos_x - start_x) / step;
-    let aby = (pos_y - exclude_zone as i32) / step;
+    let aby = (pos_y - exclude_zone) / step;
     let code = aby * 3 + abx + 2;
     code as u32
 }

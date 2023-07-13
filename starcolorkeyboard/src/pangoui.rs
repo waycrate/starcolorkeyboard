@@ -72,7 +72,7 @@ impl PangoUi {
         let x_5 = self.width - EXCULDE_ZONE_RIGHT as i32;
 
         if pos_x < x_1 {
-            let step = (self.height - exclude_zone as i32) / 4;
+            let step = (self.height - exclude_zone) / 4;
             return find_keycode_from_mainkeyboard((pos_x, pos_y), step);
         } else if pos_x > x_4 {
             if pos_x > x_5 {
@@ -87,7 +87,7 @@ impl PangoUi {
                 }
                 return None;
             }
-            match (pos_y - exclude_zone as i32) / step {
+            match (pos_y - exclude_zone) / step {
                 0 => return Some(12),
                 1 => return Some(11),
                 2 => return Some(13),
