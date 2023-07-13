@@ -67,15 +67,15 @@ impl PangoUi {
         let (pos_x, pos_y) = (pos_x as i32, pos_y as i32);
         let exclude_zone = EXCULDE_ZONE_TOP as i32;
         let step = (self.height - exclude_zone) / 3;
-        let x_1 = self.width - EXCULDE_ZONE_RIGHT as i32 - 4 * step;
-        let x_4 = self.width - EXCULDE_ZONE_RIGHT as i32 - step;
-        let x_5 = self.width - EXCULDE_ZONE_RIGHT as i32;
+        let x_1 = self.width - 4 * step;
+        let x_4 = self.width - step;
+        let x_exclude = self.width - EXCULDE_ZONE_RIGHT as i32;
         if pos_y < EXCULDE_ZONE_TOP as i32 {
-            if pos_x < x_5 {
+            if pos_x < x_exclude {
                 return None;
             }
             let step_right = EXCULDE_ZONE_TOP as i32;
-            let right_w = pos_x - x_5;
+            let right_w = pos_x - x_exclude;
             if right_w / step_right == 0 {
                 return Some(otherkeys::MIN_KEYBOARD);
             } else {
@@ -85,7 +85,7 @@ impl PangoUi {
         if pos_x < x_1 {
             let step = (self.height - exclude_zone) / 4;
             return find_keycode_from_mainkeyboard((pos_x, pos_y), step);
-        } else if pos_x > x_4 && pos_x <= x_5 {
+        } else if pos_x > x_4 {
             match (pos_y - exclude_zone) / step {
                 0 => return Some(12),
                 1 => return Some(11),
@@ -93,10 +93,6 @@ impl PangoUi {
                 _ => return None,
             }
         }
-        if pos_x > x_5 {
-            None
-        } else {
-            Some(find_keycode_from_smallkeyboard((pos_x, pos_y), x_1, step))
-        }
+        Some(find_keycode_from_smallkeyboard((pos_x, pos_y), x_1, step))
     }
 }
