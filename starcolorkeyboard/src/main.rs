@@ -270,21 +270,22 @@ impl State {
     }
 
     #[must_use]
-    fn key_release(&mut self, key: u32) -> Option<KeyModifierType> {
+    fn key_release(&mut self, key: u32) -> bool {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
         virtual_keyboard.key(1, key, KeyState::Released.into());
         let mod_pre = self.keymode;
         let keymod: KeyModifierType = key.into();
         self.keymode ^= keymod;
         if self.keymode == mod_pre {
-            None
+            false
         } else {
             virtual_keyboard.modifiers(self.keymode.bits(), 0, 0, 0);
-            Some(self.keymode)
+            true
         }
     }
 
-    fn update_map(&mut self, qh: &QueueHandle<Self>, key_type: KeyModifierType) {
+    fn update_map(&mut self, qh: &QueueHandle<Self>) {
+        let key_type = self.keymode;
         let (width, height) = self.pangoui.get_size();
         self.base_surface
             .as_ref()

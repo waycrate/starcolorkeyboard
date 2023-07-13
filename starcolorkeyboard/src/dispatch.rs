@@ -120,7 +120,7 @@ impl Dispatch<ZxdgOutputV1, ()> for State {
                 state.wl_size[index] = (width, height);
                 if index == 0 {
                     state.pangoui.set_size((width, 300));
-                    state.update_map(qh, state.keymode);
+                    state.update_map(qh);
                 }
             }
         }
@@ -304,8 +304,8 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
                             }
                             return;
                         }
-                        if let Some(key_mode) = wlstate.key_release(key) {
-                            wlstate.update_map(qh, key_mode);
+                        if wlstate.key_release(key) {
+                            wlstate.update_map(qh);
                         }
                     }
                 }
