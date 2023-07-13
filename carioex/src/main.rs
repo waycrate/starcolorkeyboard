@@ -49,6 +49,19 @@ bitflags! {
     }
 }
 
+impl From<u32> for KeyModifierType {
+    fn from(value: u32) -> Self {
+        match value {
+            otherkeys::CAPS_LOCK => KeyModifierType::CapsLock,
+            otherkeys::SHIFT_LEFT | otherkeys::SHIFT_RIGHT => KeyModifierType::Shift,
+            otherkeys::MENU => KeyModifierType::Super,
+            otherkeys::CTRL_LEFT | otherkeys::CTRL_RIGHT => KeyModifierType::Ctrl,
+            otherkeys::ALT_LEFT | otherkeys::ALT_RIGHT => KeyModifierType::Alt,
+            _ => KeyModifierType::NoMod,
+        }
+    }
+}
+
 fn main() {
     let conn = Connection::connect_to_env().unwrap();
 
@@ -232,17 +245,14 @@ impl State {
     fn key_release(&mut self, key: u32) -> Option<KeyModifierType> {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
         virtual_keyboard.key(1, key, KeyState::Released.into());
-        if key == otherkeys::SHIFT_LEFT {
-            let mod_pre = self.keymode;
-            self.keymode ^= KeyModifierType::Shift;
-            if self.keymode == mod_pre {
-                None
-            } else {
-                virtual_keyboard.modifiers(self.keymode.bits(), 0, 0, 0);
-                Some(self.keymode)
-            }
-        } else {
+        let mod_pre = self.keymode;
+        let keymod: KeyModifierType = key.into();
+        self.keymode ^= keymod;
+        if self.keymode == mod_pre {
             None
+        } else {
+            virtual_keyboard.modifiers(self.keymode.bits(), 0, 0, 0);
+            Some(self.keymode)
         }
     }
 

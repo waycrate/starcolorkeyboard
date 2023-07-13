@@ -72,11 +72,15 @@ impl MainLayout {
     }
 }
 
-fn get_keytype(key_type: KeyModifierType) -> KeyType {
-    if contain_mode(key_type, KeyModifierType::Shift) {
-        KeyType::Shift
-    } else {
-        KeyType::Normal
+impl From<KeyModifierType> for KeyType {
+    fn from(value: KeyModifierType) -> Self {
+        if contain_mode(value, KeyModifierType::Shift) {
+            KeyType::Shift
+        } else if contain_mode(value, KeyModifierType::CapsLock) {
+            KeyType::Cap
+        } else {
+            KeyType::Normal
+        }
     }
 }
 
@@ -144,7 +148,7 @@ pub(crate) fn draw_main_keyboard(
 ) {
     let step = height / 4;
 
-    let keytype = get_keytype(key_type);
+    let keytype: KeyType = key_type.into();
     for oneline in get_main_layout().iter() {
         for map in oneline.iter() {
             draw_unit_key(
