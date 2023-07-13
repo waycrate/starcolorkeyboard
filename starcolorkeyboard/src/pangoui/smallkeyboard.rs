@@ -1,9 +1,7 @@
 use cairo::Context;
 
-use super::contain_mode;
+use super::{contain_mode, RIGHT_RELAY};
 use crate::KeyModifierType;
-
-const RIGHT_RELAY: f64 = 50_f64;
 
 fn contain_shift(key_type: KeyModifierType) -> bool {
     contain_mode(key_type, KeyModifierType::Shift)
