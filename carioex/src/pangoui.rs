@@ -71,10 +71,11 @@ impl PangoUi {
             let step = self.height / 4;
             return find_keycode_from_mainkeyboard((pos_x, pos_y), step);
         } else if pos_x > x_4 {
-            if pos_y / step == 1 {
-                return Some(11);
-            } else {
-                return None;
+            match pos_y / step {
+                0 => return Some(12),
+                1 => return Some(11),
+                2 => return Some(13),
+                _ => return None,
             }
         }
         Some(find_keycode_from_smallkeyboard((pos_x, pos_y), x_1, step))

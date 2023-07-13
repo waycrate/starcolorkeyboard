@@ -155,12 +155,32 @@ pub(super) fn draw_number_keyboard(
     content.restore().unwrap();
 
     if shiftmode {
+        pangolayout.set_text("_");
+    } else {
+        pangolayout.set_text("-");
+    }
+    content.save().unwrap();
+    content.move_to(x_4 + font_adjustx, y_1 + font_adjusty);
+    pangocairo::show_layout(content, pangolayout);
+    content.restore().unwrap();
+
+    if shiftmode {
         pangolayout.set_text(")");
     } else {
         pangolayout.set_text("0");
     }
     content.save().unwrap();
     content.move_to(x_4 + font_adjustx, y_2 + font_adjusty);
+    pangocairo::show_layout(content, pangolayout);
+    content.restore().unwrap();
+
+    if shiftmode {
+        pangolayout.set_text("+");
+    } else {
+        pangolayout.set_text("=");
+    }
+    content.save().unwrap();
+    content.move_to(x_4 + font_adjustx, y_3 + font_adjusty);
     pangocairo::show_layout(content, pangolayout);
     content.restore().unwrap();
 }
