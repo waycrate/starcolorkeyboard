@@ -25,7 +25,7 @@ use wayland_protocols_wlr::layer_shell::v1::client::{
 
 use wayland_protocols::xdg::shell::client::xdg_wm_base;
 
-use wayland_protocols::xdg::xdg_output::zv1::client::zxdg_output_manager_v1;
+use wayland_protocols::xdg::xdg_output::zv1::client::{zxdg_output_manager_v1, zxdg_output_v1};
 
 use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::{
     zwp_virtual_keyboard_manager_v1, zwp_virtual_keyboard_v1,
@@ -89,11 +89,12 @@ fn main() {
         displays = state.wl_output.len() + 1;
     }
     for index in 0..state.wl_output.len() {
-        state.xdg_output_manager.as_ref().unwrap().get_xdg_output(
+        let zxdg_output = state.xdg_output_manager.as_ref().unwrap().get_xdg_output(
             &state.wl_output[index],
             &qhandle,
             (),
         );
+        state.zxdg_output.push(zxdg_output);
     }
     event_queue.blocking_dispatch(&mut state).unwrap();
 
@@ -125,6 +126,7 @@ struct State {
     buffer: Option<wl_buffer::WlBuffer>,
     wm_base: Option<xdg_wm_base::XdgWmBase>,
     xdg_output_manager: Option<zxdg_output_manager_v1::ZxdgOutputManagerV1>,
+    zxdg_output: Vec<zxdg_output_v1::ZxdgOutputV1>,
     virtual_keyboard_manager: Option<zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1>,
     virtual_keyboard: Option<zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1>,
     xkb_state: xkb::State,
@@ -161,6 +163,7 @@ impl State {
             buffer: None,
             wm_base: None,
             xdg_output_manager: None,
+            zxdg_output: vec![],
             virtual_keyboard_manager: None,
             virtual_keyboard: None,
             xkb_state: xkb::State::new(&keymap),

@@ -101,14 +101,28 @@ impl Dispatch<wl_output::WlOutput, ()> for State {
 impl Dispatch<ZxdgOutputV1, ()> for State {
     fn event(
         state: &mut Self,
-        _proxy: &ZxdgOutputV1,
+        proxy: &ZxdgOutputV1,
         event: <ZxdgOutputV1 as Proxy>::Event,
         _data: &(),
         _conn: &Connection,
-        _qhandle: &QueueHandle<Self>,
+        qh: &QueueHandle<Self>,
     ) {
         if let zxdg_output_v1::Event::LogicalSize { width, height } = event {
-            state.wl_size.push((width, height));
+            if state.wl_size.len() != state.zxdg_output.len() {
+                state.wl_size.push((width, height));
+                return;
+            }
+            if let Some(index) = state
+                .zxdg_output
+                .iter()
+                .position(|zoutput| zoutput == proxy)
+            {
+                state.wl_size[index] = (width, height);
+                if index == 0 {
+                    state.pangoui.set_size((width, 300));
+                    state.update_map(qh, state.keymode);
+                }
+            }
         }
     }
 }
