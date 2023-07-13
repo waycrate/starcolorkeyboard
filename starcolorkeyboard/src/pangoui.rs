@@ -93,6 +93,10 @@ impl PangoUi {
                 _ => return None,
             }
         }
-        Some(find_keycode_from_smallkeyboard((pos_x, pos_y), x_1, step))
+        if pos_x > x_5 {
+            None
+        } else {
+            Some(find_keycode_from_smallkeyboard((pos_x, pos_y), x_1, step))
+        }
     }
 }
