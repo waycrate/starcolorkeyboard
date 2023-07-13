@@ -79,6 +79,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
         }
     }
 }
+
 impl Dispatch<wl_output::WlOutput, ()> for State {
     fn event(
         _state: &mut Self,
@@ -94,6 +95,7 @@ impl Dispatch<wl_output::WlOutput, ()> for State {
         //}
     }
 }
+
 impl Dispatch<ZxdgOutputV1, ()> for State {
     fn event(
         state: &mut Self,

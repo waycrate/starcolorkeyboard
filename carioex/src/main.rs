@@ -65,16 +65,10 @@ impl From<u32> for KeyModifierType {
 impl From<usize> for KeyModifierType {
     fn from(value: usize) -> Self {
         let value = value as u32;
-        match value {
-            otherkeys::CAPS_LOCK => KeyModifierType::CapsLock,
-            otherkeys::SHIFT_LEFT | otherkeys::SHIFT_RIGHT => KeyModifierType::Shift,
-            otherkeys::MENU => KeyModifierType::Super,
-            otherkeys::CTRL_LEFT | otherkeys::CTRL_RIGHT => KeyModifierType::Ctrl,
-            otherkeys::ALT_LEFT | otherkeys::ALT_RIGHT => KeyModifierType::Alt,
-            _ => KeyModifierType::NoMod,
-        }
+        value.into()
     }
 }
+
 fn main() {
     let conn = Connection::connect_to_env().unwrap();
 
