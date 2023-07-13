@@ -426,26 +426,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "layershellexcairo"
-version = "0.1.0"
-dependencies = [
- "bitflags 2.3.3",
- "cairo-rs",
- "calloop",
- "image",
- "pango",
- "pangocairo",
- "serde",
- "serde_json",
- "tempfile",
- "wayland-client",
- "wayland-protocols",
- "wayland-protocols-misc",
- "wayland-protocols-wlr",
- "xkbcommon",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.146"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -827,6 +807,26 @@ name = "smallvec"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
+
+[[package]]
+name = "starcolorkeyboard"
+version = "0.1.0"
+dependencies = [
+ "bitflags 2.3.3",
+ "cairo-rs",
+ "calloop",
+ "image",
+ "pango",
+ "pangocairo",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "wayland-client",
+ "wayland-protocols",
+ "wayland-protocols-misc",
+ "wayland-protocols-wlr",
+ "xkbcommon",
+]
 
 [[package]]
 name = "static_assertions"

@@ -1,2 +1,2 @@
 [workspace]
-members = [ "base", "carioex" ]
+members = [ "base", "starcolorkeyboard" ]
