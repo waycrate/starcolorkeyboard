@@ -357,11 +357,25 @@
       "key": 56
     },
     {
-      "text": "                Space            ",
-      "width": 13,
+      "text": "Cy",
+      "width": 2,
       "line": 3,
       "start_pos": 7,
+      "key": 133
+    },
+    {
+      "text": "                Space            ",
+      "width": 9,
+      "line": 3,
+      "start_pos": 9,
       "key": 57
+    },
+    {
+      "text": "pa",
+      "width": 2,
+      "line": 3,
+      "start_pos": 18,
+      "key": 135
     },
     {
       "text": "Alt",
