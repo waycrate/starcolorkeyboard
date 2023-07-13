@@ -1,3 +1,4 @@
+mod consts;
 mod dispatch;
 mod keyboardlayouts;
 #[allow(unused)]
@@ -5,6 +6,7 @@ mod otherkeys;
 mod pangoui;
 use std::{ffi::CString, fs::File, io::Write, os::unix::prelude::AsRawFd, path::PathBuf};
 
+use consts::EXCULDE_ZONE_TOP;
 use keyboardlayouts::Layouts;
 
 use wayland_client::{
@@ -191,8 +193,8 @@ impl State {
     fn min_keyboard(&self) {
         let layer_surf = self.layer_surface.as_ref().unwrap();
         if self.is_min {
-            layer_surf.set_size(0, 40);
-            layer_surf.set_exclusive_zone(40);
+            layer_surf.set_size(0, EXCULDE_ZONE_TOP as u32);
+            layer_surf.set_exclusive_zone(EXCULDE_ZONE_TOP as i32);
         } else {
             let (_, height) = self.pangoui.get_size();
             layer_surf.set_size(0, height as u32);
