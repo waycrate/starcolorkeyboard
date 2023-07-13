@@ -70,23 +70,22 @@ impl PangoUi {
         let x_1 = self.width - EXCULDE_ZONE_RIGHT as i32 - 4 * step;
         let x_4 = self.width - EXCULDE_ZONE_RIGHT as i32 - step;
         let x_5 = self.width - EXCULDE_ZONE_RIGHT as i32;
-
+        if pos_y < EXCULDE_ZONE_TOP as i32 {
+            if pos_x < x_5 {
+                return None;
+            }
+            let step_right = EXCULDE_ZONE_TOP as i32;
+            let right_w = pos_x - x_5;
+            if right_w / step_right == 0 {
+                return Some(otherkeys::MIN_KEYBOARD);
+            } else {
+                return Some(otherkeys::CLOSE_KEYBOARD);
+            }
+        }
         if pos_x < x_1 {
             let step = (self.height - exclude_zone) / 4;
             return find_keycode_from_mainkeyboard((pos_x, pos_y), step);
-        } else if pos_x > x_4 {
-            if pos_x > x_5 {
-                if pos_y < EXCULDE_ZONE_TOP as i32 {
-                    let step_right = EXCULDE_ZONE_TOP as i32;
-                    let right_w = pos_x - x_5;
-                    if right_w / step_right == 0 {
-                        return Some(otherkeys::MIN_KEYBOARD);
-                    } else {
-                        return Some(otherkeys::CLOSE_KEYBOARD);
-                    }
-                }
-                return None;
-            }
+        } else if pos_x > x_4 && pos_x <= x_5 {
             match (pos_y - exclude_zone) / step {
                 0 => return Some(12),
                 1 => return Some(11),
