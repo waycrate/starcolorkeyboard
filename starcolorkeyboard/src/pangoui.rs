@@ -10,7 +10,7 @@ use self::mainkeyboard::find_keycode_from_mainkeyboard;
 
 use super::KeyModifierType;
 
-const RIGHT_RELAY: f64 = 50_f64;
+const RIGHT_RELAY: f64 = 100_f64;
 
 #[derive(Debug, Default)]
 pub struct PangoUi {
