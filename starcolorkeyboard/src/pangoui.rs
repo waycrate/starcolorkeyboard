@@ -5,9 +5,13 @@ mod smallkeyboard;
 use cairo::Context;
 use smallkeyboard::{draw_number_keyboard, find_keycode_from_smallkeyboard};
 
-use crate::{consts::KEYBOARD_TITLE, otherkeys, pangoui::mainkeyboard::draw_main_keyboard};
+use crate::{
+    consts::{FONT_FAMILY, KEYBOARD_TITLE},
+    otherkeys,
+    pangoui::mainkeyboard::draw_main_keyboard,
+};
 
-use self::mainkeyboard::find_keycode_from_mainkeyboard;
+use mainkeyboard::find_keycode_from_mainkeyboard;
 
 use super::KeyModifierType;
 
@@ -48,7 +52,7 @@ impl PangoUi {
         let font_size = 23;
         let pangolayout = pangocairo::create_layout(&cr);
         let mut desc = pango::FontDescription::new();
-        desc.set_family("Sans");
+        desc.set_family(FONT_FAMILY);
         desc.set_weight(pango::Weight::Bold);
 
         desc.set_size(font_size * pango::SCALE);
