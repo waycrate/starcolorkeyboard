@@ -266,13 +266,13 @@ impl State {
     fn key_press(&self, key: u32) {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
         //virtual_keyboard.modifiers(1, 0, 0, 0);
-        virtual_keyboard.key(1, key, KeyState::Pressed.into());
+        virtual_keyboard.key(100, key, KeyState::Pressed.into());
     }
 
     #[must_use]
     fn key_release(&mut self, key: u32) -> bool {
         let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
-        virtual_keyboard.key(1, key, KeyState::Released.into());
+        virtual_keyboard.key(100, key, KeyState::Released.into());
         let mod_pre = self.keymode;
         let keymod: KeyModifierType = key.into();
         self.keymode ^= keymod;
@@ -304,15 +304,7 @@ impl State {
         let mut buf = std::io::BufWriter::new(tmp);
 
         for index in self.pangoui.ui(key_type).pixels() {
-            let [mut r, mut g, mut b, mut a] = index.0;
-            // NOTE: transparent
-            if r == 255 && g == 255 && b == 255 {
-                a = 50;
-                r = 50;
-                g = 50;
-                b = 50;
-            }
-            buf.write_all(&[r, g, b, a]).unwrap();
+            buf.write_all(&index.0).unwrap();
         }
         buf.flush().unwrap();
     }

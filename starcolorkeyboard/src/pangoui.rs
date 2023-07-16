@@ -42,8 +42,9 @@ impl PangoUi {
         let width = self.width;
         let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, width, height).unwrap();
         let cr = cairo::Context::new(&surface).unwrap();
-        cr.set_source_rgb(1_f64, 1_f64, 1_f64);
+        cr.set_source_rgba(0.4_f64, 0.4_f64, 0.4_f64, 0.4);
         cr.paint().unwrap();
+        cr.set_source_rgb(1_f64, 1_f64, 1_f64);
         let font_size = 23;
         let pangolayout = pangocairo::create_layout(&cr);
         let mut desc = pango::FontDescription::new();
