@@ -138,7 +138,7 @@ fn draw_unit_key(
     let end_y = step * (line + 1) as f64 + exclude_zone;
     if locked {
         content.rectangle(start_x, start_y, end_x - start_x, end_y - start_y);
-        content.set_source_rgb(0.5, 0.5, 0.5);
+        content.set_source_rgba(0.5, 0.5, 0.5, 0.8);
         content.fill().unwrap();
         content.set_source_rgb(0_f64, 0_f64, 0_f64);
     }
