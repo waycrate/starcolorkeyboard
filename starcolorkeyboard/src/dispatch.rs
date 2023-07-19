@@ -117,8 +117,9 @@ impl Dispatch<ZxdgOutputV1, ()> for State {
                 .position(|zoutput| zoutput == proxy)
             {
                 state.zwl_size[index] = (width, height);
+                // TODO: if is the layer
                 if index == 0 {
-                    state.pangoui.set_size((width, 300));
+                    state.keyboard_ui.as_mut().unwrap().set_size((width, 300));
                     state.update_map(qh);
                 }
             }
@@ -298,7 +299,7 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
                             if key == otherkeys::CLOSE_KEYBOARD {
                                 wlstate.running = false;
                             } else if key == otherkeys::MIN_KEYBOARD {
-                                wlstate.is_min = !wlstate.is_min;
+                                wlstate.keyboard_ui.as_mut().unwrap().set_min();
                                 wlstate.min_keyboard();
                             }
                             return;
@@ -315,14 +316,22 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
                 surface_y,
                 ..
             } => {
-                wlstate.position = (surface_x, surface_y);
+                wlstate
+                    .keyboard_ui
+                    .as_mut()
+                    .unwrap()
+                    .set_point_pos((surface_x, surface_y));
             }
             wl_pointer::Event::Motion {
                 surface_x,
                 surface_y,
                 ..
             } => {
-                wlstate.position = (surface_x, surface_y);
+                wlstate
+                    .keyboard_ui
+                    .as_mut()
+                    .unwrap()
+                    .set_point_pos((surface_x, surface_y));
             }
             _ => {}
         }
@@ -340,7 +349,7 @@ impl Dispatch<wl_touch::WlTouch, ()> for State {
     ) {
         match event {
             wl_touch::Event::Down { x, y, .. } => {
-                wlstate.touch_pos = (x, y);
+                wlstate.keyboard_ui.as_mut().unwrap().set_touch_pos((x, y));
                 if let Some(key) = wlstate.get_key_touch() {
                     wlstate.key_press(key);
                 }
@@ -376,13 +385,10 @@ impl Dispatch<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1, ()> for State {
         _conn: &Connection,
         _qhandle: &QueueHandle<Self>,
     ) {
+        // TODO: if is the same surface
         if let zwlr_layer_surface_v1::Event::Configure { serial, .. } = event {
             surface.ack_configure(serial);
-            let surface = state.base_surface.as_ref().unwrap();
-            if let Some(ref buffer) = state.buffer {
-                surface.attach(Some(buffer), 0, 0);
-                surface.commit();
-            }
+            state.keyboard_ui.as_ref().unwrap().surface_refresh();
         }
     }
 }
