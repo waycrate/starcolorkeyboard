@@ -98,9 +98,41 @@ fn main() {
     }
     event_queue.blocking_dispatch(&mut state).unwrap();
 
+    // TODO: make it to option config
+    let usemutiscreen = false;
+
     if state.layer_shell.is_some() && state.wm_base.is_some() {
         state.init_virtual_keyboard(&qhandle);
-        for index in 0..state.wl_output.len() {
+        if usemutiscreen {
+            for index in 0..state.wl_output.len() {
+                let mut pangoui = pangoui::PangoUi::default();
+                pangoui.set_size(state.get_size_from_display(index));
+                //state.pangoui.set_size(state.get_size_from_display(0));
+                let buffer = state.init_buffer(
+                    &qhandle,
+                    KeyModifierType::NoMod,
+                    &pangoui,
+                    state.get_size_from_display(index),
+                );
+                let name = format!("precure_{index}");
+                let (base_surface, layer_surface) = state.init_layer_surface(
+                    name,
+                    &qhandle,
+                    state.get_size_from_display(index),
+                    Some(&state.wl_output[index].clone()),
+                );
+                state.keyboard_ui.push(KeyboardSurface {
+                    base_surface,
+                    layer_surface,
+                    pangoui,
+                    buffer,
+                    position: (0.0, 0.0),
+                    touch_pos: (0.0, 0.0),
+                    is_min: false,
+                })
+            }
+        } else {
+            let index = 0;
             let mut pangoui = pangoui::PangoUi::default();
             pangoui.set_size(state.get_size_from_display(index));
             //state.pangoui.set_size(state.get_size_from_display(0));
