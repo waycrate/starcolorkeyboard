@@ -117,7 +117,6 @@ impl Dispatch<ZxdgOutputV1, ()> for State {
                 .position(|zoutput| zoutput == proxy)
             {
                 state.zwl_size[index] = (width, height);
-                // TODO: if is the layer
                 state.keyboard_ui[index].set_size((width, 300));
                 state.update_map(qh, index);
             }
@@ -320,7 +319,6 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
                     wlstate.keyboard_ui[index].set_point_pos((surface_x, surface_y));
                     wlstate.current_display = index as i32;
                 }
-                // TODO:
             }
             wl_pointer::Event::Leave { .. } => {
                 wlstate.current_display = -1;
@@ -356,12 +354,22 @@ impl Dispatch<wl_touch::WlTouch, ()> for State {
                     wlstate.touch_current_display = index;
                     wlstate.keyboard_ui[index].set_touch_pos((x, y));
                     if let Some(key) = wlstate.get_key_touch(index) {
-                        wlstate.key_press(key);
+                        if !otherkeys::is_unique_key(key) {
+                            wlstate.key_press(key);
+                        }
                     }
                 }
             }
             wl_touch::Event::Up { .. } => {
                 if let Some(key) = wlstate.get_key_touch(wlstate.touch_current_display) {
+                    if otherkeys::is_unique_key(key) {
+                        if key == otherkeys::CLOSE_KEYBOARD {
+                            wlstate.running = false;
+                        } else if key == otherkeys::MIN_KEYBOARD {
+                            wlstate.min_keyboard_fromtouch();
+                        }
+                        return;
+                    }
                     if wlstate.key_release(key) {
                         for index in 0..wlstate.keyboard_ui.len() {
                             wlstate.update_map(qh, index);

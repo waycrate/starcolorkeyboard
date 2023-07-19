@@ -99,7 +99,7 @@ fn main() {
     event_queue.blocking_dispatch(&mut state).unwrap();
 
     // TODO: make it to option config
-    let usemutiscreen = false;
+    let usemutiscreen = consts::USE_MUTISCREEN;
 
     if state.layer_shell.is_some() && state.wm_base.is_some() {
         state.init_virtual_keyboard(&qhandle);
@@ -218,11 +218,6 @@ impl KeyboardSurface {
 
     fn get_key_touch(&self) -> Option<u32> {
         self.pangoui.get_key(self.touch_pos)
-    }
-
-    #[allow(unused)]
-    fn ui(&self, key_type: KeyModifierType) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
-        self.pangoui.ui(key_type)
     }
 
     fn min_keyboard(&self) {
@@ -388,12 +383,16 @@ impl State {
             .position(|ui| ui.is_same_basesurface(surface))
     }
 
-    // TODO : change it
     fn min_keyboard(&mut self) {
         if self.current_display >= 0 {
             self.keyboard_ui[self.current_display as usize].set_min();
             self.keyboard_ui[self.current_display as usize].min_keyboard();
         }
+    }
+
+    fn min_keyboard_fromtouch(&mut self) {
+        self.keyboard_ui[self.touch_current_display].set_min();
+        self.keyboard_ui[self.touch_current_display].min_keyboard();
     }
 
     fn get_size_from_display(&self, index: usize) -> (i32, i32) {
@@ -495,12 +494,10 @@ impl State {
         self.keyboard_ui[index].draw(key_type, tmp)
     }
 
-    // TODO: it need an index
     fn get_key_point(&self) -> Option<u32> {
         self.keyboard_ui[self.current_display as usize].get_key_point()
     }
 
-    // TODO: it need an index
     fn get_key_touch(&self, index: usize) -> Option<u32> {
         self.keyboard_ui[index].get_key_touch()
     }
