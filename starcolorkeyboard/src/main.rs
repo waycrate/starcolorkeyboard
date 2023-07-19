@@ -219,6 +219,10 @@ impl KeyboardSurface {
     fn is_same_surface(&self, surface: &zwlr_layer_surface_v1::ZwlrLayerSurfaceV1) -> bool {
         surface == &self.layer_surface
     }
+
+    fn is_same_basesurface(&self, surface: &wl_surface::WlSurface) -> bool {
+        surface == &self.base_surface
+    }
 }
 
 struct State {
@@ -236,6 +240,8 @@ struct State {
 
     // keyboard ui
     keyboard_ui: Vec<KeyboardSurface>,
+    current_display: i32,
+    touch_current_display: usize,
 
     // size and output
     zxdg_output: Vec<zxdg_output_v1::ZxdgOutputV1>,
@@ -273,6 +279,8 @@ impl State {
             wl_composer: None,
             layer_shell: None,
             keyboard_ui: Vec::new(),
+            current_display: -1,
+            touch_current_display: 0,
             wm_base: None,
             xdg_output_manager: None,
             zxdg_output: vec![],
@@ -342,13 +350,22 @@ impl State {
             .find(|ui| ui.is_same_surface(surface))
     }
 
+    fn get_display_index(&self, surface: &wl_surface::WlSurface) -> Option<usize> {
+        self.keyboard_ui
+            .iter()
+            .position(|ui| ui.is_same_basesurface(surface))
+    }
+
     // TODO : change it
-    fn min_keyboard(&self) {
-        self.keyboard_ui[0].min_keyboard();
+    fn min_keyboard(&mut self) {
+        if self.current_display >= 0 {
+            self.keyboard_ui[self.current_display as usize].set_min();
+            self.keyboard_ui[self.current_display as usize].min_keyboard();
+        }
     }
 
     fn get_size_from_display(&self, index: usize) -> (i32, i32) {
-        (self.zwl_size[index].0, 300)
+        (self.zwl_size[index].0, 270)
     }
 
     fn set_buffer(
@@ -356,10 +373,11 @@ impl State {
         qh: &QueueHandle<Self>,
         key_type: KeyModifierType,
         (width, height): (i32, i32),
+        index: usize,
     ) -> wl_buffer::WlBuffer {
         //let (width, height) = self.pangoui.get_size();
         let file = tempfile::tempfile().unwrap();
-        self.draw(key_type, &file);
+        self.draw(key_type, &file, index);
         let shm = self.wl_shm.as_ref().unwrap();
         let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
 
@@ -424,12 +442,11 @@ impl State {
         }
     }
 
-    // TODO: move it
-    fn update_map(&mut self, qh: &QueueHandle<Self>) {
+    fn update_map(&mut self, qh: &QueueHandle<Self>, index: usize) {
         let key_type = self.keymode;
-        let (width, height) = self.keyboard_ui[0].get_size();
-        let buffer = self.set_buffer(qh, key_type, (width, height));
-        let keyboard_ui = &mut self.keyboard_ui[0];
+        let (width, height) = self.keyboard_ui[index].get_size();
+        let buffer = self.set_buffer(qh, key_type, (width, height), index);
+        let keyboard_ui = &mut self.keyboard_ui[index];
         keyboard_ui.update_map(buffer, qh);
     }
 
@@ -442,15 +459,17 @@ impl State {
         buf.flush().unwrap();
     }
 
-    fn draw(&mut self, key_type: KeyModifierType, tmp: &File) {
-        self.keyboard_ui[0].draw(key_type, tmp)
+    fn draw(&mut self, key_type: KeyModifierType, tmp: &File, index: usize) {
+        self.keyboard_ui[index].draw(key_type, tmp)
     }
 
+    // TODO: it need an index
     fn get_key_point(&self) -> Option<u32> {
-        self.keyboard_ui[0].get_key_point()
+        self.keyboard_ui[self.current_display as usize].get_key_point()
     }
 
-    fn get_key_touch(&self) -> Option<u32> {
-        self.keyboard_ui[0].get_key_touch()
+    // TODO: it need an index
+    fn get_key_touch(&self, index: usize) -> Option<u32> {
+        self.keyboard_ui[index].get_key_touch()
     }
 }

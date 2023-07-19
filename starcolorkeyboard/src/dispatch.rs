@@ -118,10 +118,8 @@ impl Dispatch<ZxdgOutputV1, ()> for State {
             {
                 state.zwl_size[index] = (width, height);
                 // TODO: if is the layer
-                if index == 0 {
-                    state.keyboard_ui[0].set_size((width, 300));
-                    state.update_map(qh);
-                }
+                state.keyboard_ui[index].set_size((width, 300));
+                state.update_map(qh, index);
             }
         }
     }
@@ -299,13 +297,14 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
                             if key == otherkeys::CLOSE_KEYBOARD {
                                 wlstate.running = false;
                             } else if key == otherkeys::MIN_KEYBOARD {
-                                wlstate.keyboard_ui[0].set_min();
                                 wlstate.min_keyboard();
                             }
                             return;
                         }
                         if wlstate.key_release(key) {
-                            wlstate.update_map(qh);
+                            for index in 0..wlstate.keyboard_ui.len() {
+                                wlstate.update_map(qh, index);
+                            }
                         }
                     }
                 }
@@ -314,10 +313,17 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
             wl_pointer::Event::Enter {
                 surface_x,
                 surface_y,
+                surface,
                 ..
             } => {
+                if let Some(index) = wlstate.get_display_index(&surface) {
+                    wlstate.keyboard_ui[index].set_point_pos((surface_x, surface_y));
+                    wlstate.current_display = index as i32;
+                }
                 // TODO:
-                wlstate.keyboard_ui[0].set_point_pos((surface_x, surface_y));
+            }
+            wl_pointer::Event::Leave { .. } => {
+                wlstate.current_display = -1;
             }
             wl_pointer::Event::Motion {
                 surface_x,
@@ -325,7 +331,10 @@ impl Dispatch<wl_pointer::WlPointer, ()> for State {
                 ..
             } => {
                 // TODO:
-                wlstate.keyboard_ui[0].set_point_pos((surface_x, surface_y));
+                if wlstate.current_display >= 0 {
+                    wlstate.keyboard_ui[wlstate.current_display as usize]
+                        .set_point_pos((surface_x, surface_y));
+                }
             }
             _ => {}
         }
@@ -339,18 +348,25 @@ impl Dispatch<wl_touch::WlTouch, ()> for State {
         event: <wl_touch::WlTouch as Proxy>::Event,
         _data: &(),
         _conn: &Connection,
-        _qhandle: &QueueHandle<Self>,
+        qh: &QueueHandle<Self>,
     ) {
         match event {
-            wl_touch::Event::Down { x, y, .. } => {
-                wlstate.keyboard_ui[0].set_touch_pos((x, y));
-                if let Some(key) = wlstate.get_key_touch() {
-                    wlstate.key_press(key);
+            wl_touch::Event::Down { x, y, surface, .. } => {
+                if let Some(index) = wlstate.get_display_index(&surface) {
+                    wlstate.touch_current_display = index;
+                    wlstate.keyboard_ui[index].set_touch_pos((x, y));
+                    if let Some(key) = wlstate.get_key_touch(index) {
+                        wlstate.key_press(key);
+                    }
                 }
             }
             wl_touch::Event::Up { .. } => {
-                if let Some(key) = wlstate.get_key_touch() {
-                    wlstate.key_press(key);
+                if let Some(key) = wlstate.get_key_touch(wlstate.touch_current_display) {
+                    if wlstate.key_release(key) {
+                        for index in 0..wlstate.keyboard_ui.len() {
+                            wlstate.update_map(qh, index);
+                        }
+                    }
                 }
             }
             _ => {}
@@ -379,7 +395,6 @@ impl Dispatch<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1, ()> for State {
         _conn: &Connection,
         _qhandle: &QueueHandle<Self>,
     ) {
-        // TODO: if is the same surface
         if let zwlr_layer_surface_v1::Event::Configure { serial, .. } = event {
             surface.ack_configure(serial);
             if let Some(keyboardui) = state.get_keyboard(surface) {
