@@ -55,8 +55,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
             } else if interface == wl_compositor::WlCompositor::interface().name {
                 let compositor =
                     registry.bind::<wl_compositor::WlCompositor, _, _>(name, version, qh, ());
-                let surface = compositor.create_surface(qh, ());
-                state.base_surface = Some(surface);
+                state.wl_composer = Some(compositor);
             } else if interface == wl_shm::WlShm::interface().name {
                 state.wl_shm = Some(registry.bind::<wl_shm::WlShm, _, _>(name, version, qh, ()));
             } else if interface == wl_seat::WlSeat::interface().name {
@@ -108,8 +107,8 @@ impl Dispatch<ZxdgOutputV1, ()> for State {
         qh: &QueueHandle<Self>,
     ) {
         if let zxdg_output_v1::Event::LogicalSize { width, height } = event {
-            if state.wl_size.len() != state.zxdg_output.len() {
-                state.wl_size.push((width, height));
+            if state.zwl_size.len() != state.zxdg_output.len() {
+                state.zwl_size.push((width, height));
                 return;
             }
             if let Some(index) = state
@@ -117,7 +116,7 @@ impl Dispatch<ZxdgOutputV1, ()> for State {
                 .iter()
                 .position(|zoutput| zoutput == proxy)
             {
-                state.wl_size[index] = (width, height);
+                state.zwl_size[index] = (width, height);
                 if index == 0 {
                     state.pangoui.set_size((width, 300));
                     state.update_map(qh);

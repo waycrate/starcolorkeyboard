@@ -11,7 +11,7 @@ use keyboardlayouts::Layouts;
 
 use wayland_client::{
     protocol::{
-        wl_buffer,
+        wl_buffer, wl_compositor,
         wl_keyboard::{self, KeyState},
         wl_output, wl_seat, wl_shm, wl_surface,
     },
@@ -114,27 +114,51 @@ fn main() {
     }
 }
 
-struct State {
-    running: bool,
-    wl_output: Vec<wl_output::WlOutput>,
-    wl_size: Vec<(i32, i32)>,
-    wl_shm: Option<wl_shm::WlShm>,
-    wl_seat: Option<wl_seat::WlSeat>,
-    base_surface: Option<wl_surface::WlSurface>,
-    layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
-    layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
-    buffer: Option<wl_buffer::WlBuffer>,
-    wm_base: Option<xdg_wm_base::XdgWmBase>,
-    xdg_output_manager: Option<zxdg_output_manager_v1::ZxdgOutputManagerV1>,
-    zxdg_output: Vec<zxdg_output_v1::ZxdgOutputV1>,
-    virtual_keyboard_manager: Option<zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1>,
-    virtual_keyboard: Option<zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1>,
-    xkb_state: xkb::State,
+#[allow(unused)]
+#[derive(Debug)]
+struct KeyboardSurface {
+    base_surface: wl_surface::WlSurface,
+    layer_surface: zwlr_layer_surface_v1::ZwlrLayerSurfaceV1,
     pangoui: PangoUi,
-    keymode: KeyModifierType,
+    buffer: wl_buffer::WlBuffer,
     position: (f64, f64),
     touch_pos: (f64, f64),
     is_min: bool,
+}
+
+struct State {
+    // running state
+    running: bool,
+
+    // to init zxdg_output
+    wl_output: Vec<wl_output::WlOutput>,
+
+    // base shell
+    wl_shm: Option<wl_shm::WlShm>,
+    wl_seat: Option<wl_seat::WlSeat>,
+    wl_composer: Option<wl_compositor::WlCompositor>,
+    layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
+
+    // keyboard ui
+    base_surface: Option<wl_surface::WlSurface>,
+    layer_surface: Option<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1>,
+    pangoui: PangoUi,
+    buffer: Option<wl_buffer::WlBuffer>,
+    position: (f64, f64),
+    touch_pos: (f64, f64),
+    is_min: bool,
+
+    // size and output
+    zxdg_output: Vec<zxdg_output_v1::ZxdgOutputV1>,
+    zwl_size: Vec<(i32, i32)>,
+    xdg_output_manager: Option<zxdg_output_manager_v1::ZxdgOutputManagerV1>,
+    wm_base: Option<xdg_wm_base::XdgWmBase>,
+
+    // keyboard
+    virtual_keyboard_manager: Option<zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1>,
+    virtual_keyboard: Option<zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1>,
+    xkb_state: xkb::State,
+    keymode: KeyModifierType,
 }
 
 impl State {
@@ -154,9 +178,10 @@ impl State {
         State {
             running: true,
             wl_output: vec![],
-            wl_size: vec![],
+            zwl_size: vec![],
             wl_shm: None,
             wl_seat: None,
+            wl_composer: None,
             base_surface: None,
             layer_shell: None,
             layer_surface: None,
@@ -208,7 +233,7 @@ impl State {
     }
 
     fn get_size_from_display(&self, index: usize) -> (i32, i32) {
-        (self.wl_size[index].0, 300)
+        (self.zwl_size[index].0, 300)
     }
 
     fn init_layer_surface(
@@ -217,8 +242,9 @@ impl State {
         (_width, height): (i32, i32),
         output: Option<&wl_output::WlOutput>,
     ) {
+        let surface = self.wl_composer.as_ref().unwrap().create_surface(qh, ());
         let layer = self.layer_shell.as_ref().unwrap().get_layer_surface(
-            self.base_surface.as_ref().unwrap(),
+            &surface,
             output,
             Layer::Overlay,
             "precure".to_string(),
@@ -229,7 +255,10 @@ impl State {
         layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::None);
         layer.set_exclusive_zone(height);
         layer.set_size(0, height as u32);
-        self.base_surface.as_ref().unwrap().commit();
+
+        surface.commit();
+
+        self.base_surface = Some(surface);
 
         self.layer_surface = Some(layer);
     }
