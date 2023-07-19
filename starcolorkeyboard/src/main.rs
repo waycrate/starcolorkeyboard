@@ -288,7 +288,8 @@ impl State {
         self.init_draw(key_type, pangoui, &file);
         let shm = self.wl_shm.as_ref().unwrap();
         let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
-        let buffer = pool.create_buffer(
+        
+        pool.create_buffer(
             0,
             width,
             height,
@@ -296,8 +297,7 @@ impl State {
             wl_shm::Format::Argb8888,
             qh,
             (),
-        );
-        buffer
+        )
     }
     // TODO: move to two funciton
     fn set_buffer(
@@ -311,7 +311,8 @@ impl State {
         self.draw(key_type, &file);
         let shm = self.wl_shm.as_ref().unwrap();
         let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
-        let buffer = pool.create_buffer(
+        
+        pool.create_buffer(
             0,
             width,
             height,
@@ -319,8 +320,7 @@ impl State {
             wl_shm::Format::Argb8888,
             qh,
             (),
-        );
-        buffer
+        )
     }
 
     // TODO : change it
