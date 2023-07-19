@@ -6,7 +6,7 @@ use cairo::Context;
 use smallkeyboard::{draw_number_keyboard, find_keycode_from_smallkeyboard};
 
 use crate::{
-    consts::{FONT_FAMILY, KEYBOARD_TITLE},
+    consts::{FONT_FAMILY, FONT_SIZE, KEYBOARD_TITLE},
     otherkeys,
     pangoui::mainkeyboard::draw_main_keyboard,
 };
@@ -49,7 +49,7 @@ impl PangoUi {
         cr.set_source_rgba(0.4_f64, 0.4_f64, 0.4_f64, 0.4);
         cr.paint().unwrap();
         cr.set_source_rgb(1_f64, 1_f64, 1_f64);
-        let font_size = 23;
+        let font_size = FONT_SIZE;
         let pangolayout = pangocairo::create_layout(&cr);
         let mut desc = pango::FontDescription::new();
         desc.set_family(FONT_FAMILY);
