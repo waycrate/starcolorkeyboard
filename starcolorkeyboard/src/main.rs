@@ -149,12 +149,15 @@ impl KeyboardSurface {
     fn set_min(&mut self) {
         self.is_min = !self.is_min
     }
+
     fn set_touch_pos(&mut self, (x, y): (f64, f64)) {
         self.touch_pos = (x, y)
     }
+
     fn set_point_pos(&mut self, (x, y): (f64, f64)) {
         self.position = (x, y)
     }
+
     fn draw(&mut self, key_type: KeyModifierType, tmp: &File) {
         let mut buf = std::io::BufWriter::new(tmp);
 
@@ -301,39 +304,6 @@ impl State {
         )
     }
 
-    fn set_buffer(
-        &mut self,
-        qh: &QueueHandle<Self>,
-        key_type: KeyModifierType,
-        (width, height): (i32, i32),
-    ) -> wl_buffer::WlBuffer {
-        //let (width, height) = self.pangoui.get_size();
-        let file = tempfile::tempfile().unwrap();
-        self.draw(key_type, &file);
-        let shm = self.wl_shm.as_ref().unwrap();
-        let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
-
-        pool.create_buffer(
-            0,
-            width,
-            height,
-            width * 4,
-            wl_shm::Format::Argb8888,
-            qh,
-            (),
-        )
-    }
-
-    // TODO : change it
-    fn min_keyboard(&self) {
-        self.keyboard_ui.as_ref().unwrap().min_keyboard();
-    }
-
-    fn get_size_from_display(&self, index: usize) -> (i32, i32) {
-        (self.zwl_size[index].0, 300)
-    }
-
-    // TODO: change it
     fn init_layer_surface(
         &mut self,
         name: String,
@@ -361,6 +331,38 @@ impl State {
         surface.commit();
 
         (surface, layer)
+    }
+
+    // TODO : change it
+    fn min_keyboard(&self) {
+        self.keyboard_ui.as_ref().unwrap().min_keyboard();
+    }
+
+    fn get_size_from_display(&self, index: usize) -> (i32, i32) {
+        (self.zwl_size[index].0, 300)
+    }
+
+    fn set_buffer(
+        &mut self,
+        qh: &QueueHandle<Self>,
+        key_type: KeyModifierType,
+        (width, height): (i32, i32),
+    ) -> wl_buffer::WlBuffer {
+        //let (width, height) = self.pangoui.get_size();
+        let file = tempfile::tempfile().unwrap();
+        self.draw(key_type, &file);
+        let shm = self.wl_shm.as_ref().unwrap();
+        let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
+
+        pool.create_buffer(
+            0,
+            width,
+            height,
+            width * 4,
+            wl_shm::Format::Argb8888,
+            qh,
+            (),
+        )
     }
 
     fn get_keymap_as_file(&mut self) -> (File, u32) {
