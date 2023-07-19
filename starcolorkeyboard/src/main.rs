@@ -117,7 +117,7 @@ fn main() {
                 state.get_size_from_display(index),
                 Some(&state.wl_output[index].clone()),
             );
-            state.keyboard_ui = Some(KeyboardSurface {
+            state.keyboard_ui.push(KeyboardSurface {
                 base_surface,
                 layer_surface,
                 pangoui,
@@ -235,7 +235,7 @@ struct State {
     layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
 
     // keyboard ui
-    keyboard_ui: Option<KeyboardSurface>,
+    keyboard_ui: Vec<KeyboardSurface>,
 
     // size and output
     zxdg_output: Vec<zxdg_output_v1::ZxdgOutputV1>,
@@ -272,7 +272,7 @@ impl State {
             wl_seat: None,
             wl_composer: None,
             layer_shell: None,
-            keyboard_ui: None,
+            keyboard_ui: Vec::new(),
             wm_base: None,
             xdg_output_manager: None,
             zxdg_output: vec![],
@@ -333,9 +333,18 @@ impl State {
         (surface, layer)
     }
 
+    fn get_keyboard(
+        &self,
+        surface: &zwlr_layer_surface_v1::ZwlrLayerSurfaceV1,
+    ) -> Option<&KeyboardSurface> {
+        self.keyboard_ui
+            .iter()
+            .find(|ui| ui.is_same_surface(surface))
+    }
+
     // TODO : change it
     fn min_keyboard(&self) {
-        self.keyboard_ui.as_ref().unwrap().min_keyboard();
+        self.keyboard_ui[0].min_keyboard();
     }
 
     fn get_size_from_display(&self, index: usize) -> (i32, i32) {
@@ -418,9 +427,9 @@ impl State {
     // TODO: move it
     fn update_map(&mut self, qh: &QueueHandle<Self>) {
         let key_type = self.keymode;
-        let (width, height) = self.keyboard_ui.as_ref().unwrap().get_size();
+        let (width, height) = self.keyboard_ui[0].get_size();
         let buffer = self.set_buffer(qh, key_type, (width, height));
-        let keyboard_ui = self.keyboard_ui.as_mut().unwrap();
+        let keyboard_ui = &mut self.keyboard_ui[0];
         keyboard_ui.update_map(buffer, qh);
     }
 
@@ -434,14 +443,14 @@ impl State {
     }
 
     fn draw(&mut self, key_type: KeyModifierType, tmp: &File) {
-        self.keyboard_ui.as_mut().unwrap().draw(key_type, tmp)
+        self.keyboard_ui[0].draw(key_type, tmp)
     }
 
     fn get_key_point(&self) -> Option<u32> {
-        self.keyboard_ui.as_ref().unwrap().get_key_point()
+        self.keyboard_ui[0].get_key_point()
     }
 
     fn get_key_touch(&self) -> Option<u32> {
-        self.keyboard_ui.as_ref().unwrap().get_key_touch()
+        self.keyboard_ui[0].get_key_touch()
     }
 }
