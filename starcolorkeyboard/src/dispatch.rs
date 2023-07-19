@@ -388,7 +388,10 @@ impl Dispatch<zwlr_layer_surface_v1::ZwlrLayerSurfaceV1, ()> for State {
         // TODO: if is the same surface
         if let zwlr_layer_surface_v1::Event::Configure { serial, .. } = event {
             surface.ack_configure(serial);
-            state.keyboard_ui.as_ref().unwrap().surface_refresh();
+            let keyboardui = state.keyboard_ui.as_ref().unwrap();
+            if keyboardui.is_same_surface(surface) {
+                keyboardui.surface_refresh();
+            }
         }
     }
 }

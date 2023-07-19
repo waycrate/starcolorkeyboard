@@ -100,29 +100,33 @@ fn main() {
 
     if state.layer_shell.is_some() && state.wm_base.is_some() {
         state.init_virtual_keyboard(&qhandle);
-        let mut pangoui = pangoui::PangoUi::default();
-        pangoui.set_size(state.get_size_from_display(0));
-        //state.pangoui.set_size(state.get_size_from_display(0));
-        let buffer = state.init_buffer(
-            &qhandle,
-            KeyModifierType::NoMod,
-            &pangoui,
-            state.get_size_from_display(0),
-        );
-        let (base_surface, layer_surface) = state.init_layer_surface(
-            &qhandle,
-            state.get_size_from_display(0),
-            Some(&state.wl_output[0].clone()),
-        );
-        state.keyboard_ui = Some(KeyboardSurface {
-            base_surface,
-            layer_surface,
-            pangoui,
-            buffer,
-            position: (0.0, 0.0),
-            touch_pos: (0.0, 0.0),
-            is_min: false,
-        })
+        for index in 0..state.wl_output.len() {
+            let mut pangoui = pangoui::PangoUi::default();
+            pangoui.set_size(state.get_size_from_display(index));
+            //state.pangoui.set_size(state.get_size_from_display(0));
+            let buffer = state.init_buffer(
+                &qhandle,
+                KeyModifierType::NoMod,
+                &pangoui,
+                state.get_size_from_display(index),
+            );
+            let name = format!("precure_{index}");
+            let (base_surface, layer_surface) = state.init_layer_surface(
+                name,
+                &qhandle,
+                state.get_size_from_display(index),
+                Some(&state.wl_output[index].clone()),
+            );
+            state.keyboard_ui = Some(KeyboardSurface {
+                base_surface,
+                layer_surface,
+                pangoui,
+                buffer,
+                position: (0.0, 0.0),
+                touch_pos: (0.0, 0.0),
+                is_min: false,
+            })
+        }
     }
 
     while state.running {
@@ -130,7 +134,6 @@ fn main() {
     }
 }
 
-#[allow(unused)]
 #[derive(Debug)]
 struct KeyboardSurface {
     base_surface: wl_surface::WlSurface,
@@ -142,7 +145,6 @@ struct KeyboardSurface {
     is_min: bool,
 }
 
-#[allow(unused)]
 impl KeyboardSurface {
     fn set_min(&mut self) {
         self.is_min = !self.is_min
@@ -183,6 +185,7 @@ impl KeyboardSurface {
         self.pangoui.get_key(self.touch_pos)
     }
 
+    #[allow(unused)]
     fn ui(&self, key_type: KeyModifierType) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
         self.pangoui.ui(key_type)
     }
@@ -201,17 +204,17 @@ impl KeyboardSurface {
         self.base_surface.commit();
     }
 
-    fn get_base_surface(&self) -> &wl_surface::WlSurface {
-        &self.base_surface
-    }
-
     fn update_map(&mut self, buffer: wl_buffer::WlBuffer, qh: &QueueHandle<State>) {
-        self.buffer = buffer;
         let (width, height) = self.get_size();
+        self.buffer = buffer;
         self.base_surface.damage_buffer(0, 0, width, height);
         self.base_surface.frame(qh, ());
         self.base_surface.attach(Some(&self.buffer), 0, 0);
         self.base_surface.commit();
+    }
+
+    fn is_same_surface(&self, surface: &zwlr_layer_surface_v1::ZwlrLayerSurfaceV1) -> bool {
+        surface == &self.layer_surface
     }
 }
 
@@ -283,12 +286,10 @@ impl State {
         pangoui: &PangoUi,
         (width, height): (i32, i32),
     ) -> wl_buffer::WlBuffer {
-        //let (width, height) = self.pangoui.get_size();
         let file = tempfile::tempfile().unwrap();
         self.init_draw(key_type, pangoui, &file);
         let shm = self.wl_shm.as_ref().unwrap();
         let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
-        
         pool.create_buffer(
             0,
             width,
@@ -299,7 +300,7 @@ impl State {
             (),
         )
     }
-    // TODO: move to two funciton
+
     fn set_buffer(
         &mut self,
         qh: &QueueHandle<Self>,
@@ -311,7 +312,7 @@ impl State {
         self.draw(key_type, &file);
         let shm = self.wl_shm.as_ref().unwrap();
         let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
-        
+
         pool.create_buffer(
             0,
             width,
@@ -335,6 +336,7 @@ impl State {
     // TODO: change it
     fn init_layer_surface(
         &mut self,
+        name: String,
         qh: &QueueHandle<State>,
         (_width, height): (i32, i32),
         output: Option<&wl_output::WlOutput>,
@@ -347,7 +349,7 @@ impl State {
             &surface,
             output,
             Layer::Overlay,
-            "precure".to_string(),
+            name,
             qh,
             (),
         );
@@ -359,9 +361,6 @@ impl State {
         surface.commit();
 
         (surface, layer)
-        //self.base_surface = Some(surface);
-
-        //self.layer_surface = Some(layer);
     }
 
     fn get_keymap_as_file(&mut self) -> (File, u32) {
@@ -431,13 +430,9 @@ impl State {
         }
         buf.flush().unwrap();
     }
-    fn draw(&mut self, key_type: KeyModifierType, tmp: &File) {
-        let mut buf = std::io::BufWriter::new(tmp);
 
-        for index in self.keyboard_ui.as_ref().unwrap().ui(key_type).pixels() {
-            buf.write_all(&index.0).unwrap();
-        }
-        buf.flush().unwrap();
+    fn draw(&mut self, key_type: KeyModifierType, tmp: &File) {
+        self.keyboard_ui.as_mut().unwrap().draw(key_type, tmp)
     }
 
     fn get_key_point(&self) -> Option<u32> {
