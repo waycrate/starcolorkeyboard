@@ -71,6 +71,34 @@ impl From<usize> for KeyModifierType {
     }
 }
 
+pub fn get_keymap_as_file() -> (File, u32) {
+    let context = xkb::Context::new(xkb::CONTEXT_NO_FLAGS);
+
+    let keymap = xkb::Keymap::new_from_names(
+        &context,
+        "",
+        "",
+        Layouts::EnglishUs.to_layout_name(), // if no , it is norwegian
+        "",
+        None,
+        xkb::KEYMAP_COMPILE_NO_FLAGS,
+    )
+    .expect("xkbcommon keymap panicked!");
+    let xkb_state = xkb::State::new(&keymap);
+    let keymap = xkb_state
+        .get_keymap()
+        .get_as_string(xkb::KEYMAP_FORMAT_TEXT_V1);
+    let keymap = CString::new(keymap).expect("Keymap should not contain interior nul bytes");
+    let keymap = keymap.as_bytes_with_nul();
+    let dir = std::env::var_os("XDG_RUNTIME_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(std::env::temp_dir);
+    let mut file = tempfile::tempfile_in(dir).expect("File could not be created!");
+    file.write_all(keymap).unwrap();
+    file.flush().unwrap();
+    (file, keymap.len() as u32)
+}
+
 fn main() {
     let conn = Connection::connect_to_env().unwrap();
 
@@ -252,6 +280,7 @@ impl KeyboardSurface {
     }
 }
 
+#[derive(Debug)]
 struct State {
     // running state
     running: bool,
@@ -279,24 +308,11 @@ struct State {
     // keyboard
     virtual_keyboard_manager: Option<zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1>,
     virtual_keyboard: Option<zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1>,
-    xkb_state: xkb::State,
     keymode: KeyModifierType,
 }
 
 impl State {
     fn init() -> Self {
-        let context = xkb::Context::new(xkb::CONTEXT_NO_FLAGS);
-
-        let keymap = xkb::Keymap::new_from_names(
-            &context,
-            "",
-            "",
-            Layouts::EnglishUs.to_layout_name(), // if no , it is norwegian
-            "",
-            None,
-            xkb::KEYMAP_COMPILE_NO_FLAGS,
-        )
-        .expect("xkbcommon keymap panicked!");
         State {
             running: true,
             wl_output: vec![],
@@ -313,7 +329,6 @@ impl State {
             zxdg_output: vec![],
             virtual_keyboard_manager: None,
             virtual_keyboard: None,
-            xkb_state: xkb::State::new(&keymap),
             keymode: KeyModifierType::NoMod,
         }
     }
@@ -423,27 +438,11 @@ impl State {
         )
     }
 
-    fn get_keymap_as_file(&mut self) -> (File, u32) {
-        let keymap = self
-            .xkb_state
-            .get_keymap()
-            .get_as_string(xkb::KEYMAP_FORMAT_TEXT_V1);
-        let keymap = CString::new(keymap).expect("Keymap should not contain interior nul bytes");
-        let keymap = keymap.as_bytes_with_nul();
-        let dir = std::env::var_os("XDG_RUNTIME_DIR")
-            .map(PathBuf::from)
-            .unwrap_or_else(std::env::temp_dir);
-        let mut file = tempfile::tempfile_in(dir).expect("File could not be created!");
-        file.write_all(keymap).unwrap();
-        file.flush().unwrap();
-        (file, keymap.len() as u32)
-    }
-
     fn init_virtual_keyboard(&mut self, qh: &QueueHandle<Self>) {
         let virtual_keyboard_manager = self.virtual_keyboard_manager.as_ref().unwrap();
         let seat = self.wl_seat.as_ref().unwrap();
         let virtual_keyboard = virtual_keyboard_manager.create_virtual_keyboard(seat, qh, ());
-        let (file, size) = self.get_keymap_as_file();
+        let (file, size) = get_keymap_as_file();
         virtual_keyboard.keymap(
             wl_keyboard::KeymapFormat::XkbV1.into(),
             file.as_raw_fd(),
