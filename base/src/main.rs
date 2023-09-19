@@ -1,4 +1,4 @@
-use std::{fs::File, os::unix::prelude::AsRawFd};
+use std::{fs::File, os::fd::AsFd};
 use wayland_client::{
     protocol::{
         wl_buffer, wl_compositor, wl_keyboard, wl_output, wl_registry, wl_seat, wl_shm,
@@ -93,7 +93,7 @@ impl Dispatch<wl_registry::WlRegistry, ()> for State {
 
                 let mut file = tempfile::tempfile().unwrap();
                 draw(&mut file, (init_w, init_h));
-                let pool = shm.create_pool(file.as_raw_fd(), (init_w * init_h * 4) as i32, qh, ());
+                let pool = shm.create_pool(file.as_fd(), (init_w * init_h * 4) as i32, qh, ());
                 let buffer = pool.create_buffer(
                     0,
                     init_w as i32,

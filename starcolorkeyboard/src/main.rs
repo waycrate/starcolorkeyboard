@@ -4,7 +4,7 @@ mod keyboardlayouts;
 #[allow(unused)]
 mod otherkeys;
 mod pangoui;
-use std::{ffi::CString, fs::File, io::Write, os::unix::prelude::AsRawFd, path::PathBuf};
+use std::{ffi::CString, fs::File, io::Write, os::fd::AsFd, path::PathBuf};
 
 use consts::EXCULDE_ZONE_TOP;
 use keyboardlayouts::Layouts;
@@ -342,7 +342,7 @@ impl State {
         let file = tempfile::tempfile().unwrap();
         self.init_draw(key_type, pangoui, &file);
         let shm = self.wl_shm.as_ref().unwrap();
-        let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
+        let pool = shm.create_pool(file.as_fd(), width * height * 4, qh, ());
         pool.create_buffer(
             0,
             width,
@@ -425,7 +425,7 @@ impl State {
         let file = tempfile::tempfile().unwrap();
         self.draw(key_type, &file, index);
         let shm = self.wl_shm.as_ref().unwrap();
-        let pool = shm.create_pool(file.as_raw_fd(), width * height * 4, qh, ());
+        let pool = shm.create_pool(file.as_fd(), width * height * 4, qh, ());
 
         pool.create_buffer(
             0,
@@ -443,11 +443,7 @@ impl State {
         let seat = self.wl_seat.as_ref().unwrap();
         let virtual_keyboard = virtual_keyboard_manager.create_virtual_keyboard(seat, qh, ());
         let (file, size) = get_keymap_as_file();
-        virtual_keyboard.keymap(
-            wl_keyboard::KeymapFormat::XkbV1.into(),
-            file.as_raw_fd(),
-            size,
-        );
+        virtual_keyboard.keymap(wl_keyboard::KeymapFormat::XkbV1.into(), file.as_fd(), size);
         self.virtual_keyboard = Some(virtual_keyboard);
     }
 
