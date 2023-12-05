@@ -27,15 +27,9 @@ xkbcommon = "0.6.0"
 #calloop = "0.12.1"
 tempfile = "3.8.0"
 
-cairo-rs = { version = "0.18.2", features = ["png"] }
+cairo-rs = "0.18.2"
 pango = "0.18.0"
 pangocairo = "0.18.0"
-
-image = { version = "0.24", default-features = false, features = [
-	"jpeg",
-	"png",
-	"pnm",
-] }
 
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
