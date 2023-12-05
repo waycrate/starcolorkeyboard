@@ -66,7 +66,7 @@ impl PangoUi {
         cr.paint().unwrap();
         cr.set_source_rgb(1_f64, 1_f64, 1_f64);
         let font_size = FONT_SIZE;
-        let pangolayout = pangocairo::create_layout(&cr);
+        let pangolayout = pangocairo::create_layout(cr);
         let mut desc = pango::FontDescription::new();
         desc.set_family(FONT_FAMILY);
         desc.set_weight(pango::Weight::Bold);
@@ -74,9 +74,9 @@ impl PangoUi {
         desc.set_size(font_size * pango::SCALE);
         pangolayout.set_font_description(Some(&desc));
 
-        draw_number_keyboard(&cr, &pangolayout, width, height, 27, key_type);
-        draw_main_keyboard(&cr, &pangolayout, height, 27, key_type);
-        draw_title(&cr, &pangolayout, width);
+        draw_number_keyboard(cr, &pangolayout, width, height, 27, key_type);
+        draw_main_keyboard(cr, &pangolayout, height, 27, key_type);
+        draw_title(cr, &pangolayout, width);
     }
 
     pub fn set_size(&mut self, (width, height): (i32, i32)) {
