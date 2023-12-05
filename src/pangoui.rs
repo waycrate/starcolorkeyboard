@@ -62,7 +62,7 @@ impl PangoUi {
 
         let cr = self.context.as_ref().unwrap();
         cr.set_operator(cairo::Operator::Source);
-        cr.set_source_rgba(0.4_f64, 0.4_f64, 0.4_f64, 0.4);
+        cr.set_source_rgba(0.8_f64, 0.8_f64, 0.8_f64, 0.3);
         cr.paint().unwrap();
         cr.set_source_rgb(1_f64, 1_f64, 1_f64);
         let font_size = FONT_SIZE;
