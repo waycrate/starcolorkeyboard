@@ -139,7 +139,7 @@ fn main() {
                 let buffer = state.init_buffer(
                     &qhandle,
                     KeyModifierType::NoMod,
-                    &pangoui,
+                    &mut pangoui,
                     state.get_size_from_display(index),
                 );
                 let name = format!("precure_{index}");
@@ -167,7 +167,7 @@ fn main() {
             let buffer = state.init_buffer(
                 &qhandle,
                 KeyModifierType::NoMod,
-                &pangoui,
+                &mut pangoui,
                 state.get_size_from_display(index),
             );
             let name = format!("precure_{index}");
@@ -218,13 +218,8 @@ impl KeyboardSurface {
         self.position = (x, y)
     }
 
-    fn draw(&mut self, key_type: KeyModifierType, tmp: &File) {
-        let mut buf = std::io::BufWriter::new(tmp);
-
-        for index in self.pangoui.ui(key_type).pixels() {
-            buf.write_all(&index.0).unwrap();
-        }
-        buf.flush().unwrap();
+    fn redraw(&self, key_type: KeyModifierType) {
+        self.pangoui.repaint(key_type);
     }
 
     fn set_size(&mut self, (width, height): (i32, i32)) {
@@ -262,9 +257,8 @@ impl KeyboardSurface {
         self.base_surface.commit();
     }
 
-    fn update_map(&mut self, buffer: wl_buffer::WlBuffer, qh: &QueueHandle<State>) {
+    fn update_map(&mut self, qh: &QueueHandle<State>) {
         let (width, height) = self.get_size();
-        self.buffer = buffer;
         self.base_surface.damage_buffer(0, 0, width, height);
         self.base_surface.frame(qh, ());
         self.base_surface.attach(Some(&self.buffer), 0, 0);
@@ -336,11 +330,11 @@ impl State {
         &mut self,
         qh: &QueueHandle<Self>,
         key_type: KeyModifierType,
-        pangoui: &PangoUi,
+        pangoui: &mut PangoUi,
         (width, height): (i32, i32),
     ) -> wl_buffer::WlBuffer {
-        let file = tempfile::tempfile().unwrap();
-        self.init_draw(key_type, pangoui, &file);
+        let mut file = tempfile::tempfile().unwrap();
+        self.init_draw(key_type, pangoui, &mut file);
         let shm = self.wl_shm.as_ref().unwrap();
         let pool = shm.create_pool(file.as_fd(), width * height * 4, qh, ());
         pool.create_buffer(
@@ -414,30 +408,6 @@ impl State {
         (self.zwl_size[index].0, 270)
     }
 
-    fn set_buffer(
-        &mut self,
-        qh: &QueueHandle<Self>,
-        key_type: KeyModifierType,
-        (width, height): (i32, i32),
-        index: usize,
-    ) -> wl_buffer::WlBuffer {
-        //let (width, height) = self.pangoui.get_size();
-        let file = tempfile::tempfile().unwrap();
-        self.draw(key_type, &file, index);
-        let shm = self.wl_shm.as_ref().unwrap();
-        let pool = shm.create_pool(file.as_fd(), width * height * 4, qh, ());
-
-        pool.create_buffer(
-            0,
-            width,
-            height,
-            width * 4,
-            wl_shm::Format::Argb8888,
-            qh,
-            (),
-        )
-    }
-
     fn init_virtual_keyboard(&mut self, qh: &QueueHandle<Self>) {
         let virtual_keyboard_manager = self.virtual_keyboard_manager.as_ref().unwrap();
         let seat = self.wl_seat.as_ref().unwrap();
@@ -470,24 +440,15 @@ impl State {
 
     fn update_map(&mut self, qh: &QueueHandle<Self>, index: usize) {
         let key_type = self.keymode;
-        let (width, height) = self.keyboard_ui[index].get_size();
-        let buffer = self.set_buffer(qh, key_type, (width, height), index);
         let keyboard_ui = &mut self.keyboard_ui[index];
-        keyboard_ui.update_map(buffer, qh);
+        keyboard_ui.redraw(key_type);
+        keyboard_ui.update_map(qh);
     }
 
-    fn init_draw(&mut self, key_type: KeyModifierType, pangoui: &pangoui::PangoUi, tmp: &File) {
-        let mut buf = std::io::BufWriter::new(tmp);
-
-        for index in pangoui.ui(key_type).pixels() {
-            buf.write_all(&index.0).unwrap();
-        }
-        buf.flush().unwrap();
+    fn init_draw(&mut self, key_type: KeyModifierType, pangoui: &mut pangoui::PangoUi, tmp: &mut File) {
+        pangoui.init_draw(key_type, tmp)
     }
 
-    fn draw(&mut self, key_type: KeyModifierType, tmp: &File, index: usize) {
-        self.keyboard_ui[index].draw(key_type, tmp)
-    }
 
     fn get_key_point(&self) -> Option<u32> {
         self.keyboard_ui[self.current_display as usize].get_key_point()

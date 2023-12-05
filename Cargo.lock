@@ -417,6 +417,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "memmap2"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "deaba38d7abf1d4cca21cc89e932e542ba2b9258664d2a9ef0e61512039c9375"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "memoffset"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -729,6 +738,7 @@ dependencies = [
  "bitflags 2.4.0",
  "cairo-rs",
  "image",
+ "memmap2 0.9.0",
  "pango",
  "pangocairo",
  "serde",
@@ -1062,7 +1072,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c286371c44b3572d19b09196c129a8fff47d7704d6494daefb44fec10f0278ab"
 dependencies = [
  "libc",
- "memmap2",
+ "memmap2 0.7.1",
  "xkeysym",
 ]
 

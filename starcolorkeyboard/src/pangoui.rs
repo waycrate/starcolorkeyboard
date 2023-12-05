@@ -2,7 +2,10 @@ mod mainkeyboard;
 mod smallkeyboard;
 //use std::f64::consts::PI;
 
+use std::fs::File;
+
 use cairo::Context;
+use memmap2::MmapMut;
 use smallkeyboard::{draw_number_keyboard, find_keycode_from_smallkeyboard};
 
 use crate::{
@@ -21,6 +24,7 @@ use crate::consts::{EXCULDE_ZONE_RIGHT, EXCULDE_ZONE_TOP};
 pub struct PangoUi {
     width: i32,
     height: i32,
+    context: Option<Context>,
 }
 
 fn contain_mode(key_type: KeyModifierType, mode: KeyModifierType) -> bool {
@@ -38,14 +42,26 @@ fn draw_title(context: &Context, pangolayout: &pango::Layout, width: i32) {
 }
 
 impl PangoUi {
-    pub(crate) fn ui(
-        &self,
-        key_type: KeyModifierType,
-    ) -> image::ImageBuffer<image::Rgba<u8>, Vec<u8>> {
+    pub(crate) fn init_draw(&mut self, key_type: KeyModifierType, tmp: &mut File) {
+        let cairo_fmt = cairo::Format::ARgb32;
+        let stride = cairo_fmt.stride_for_width(self.width as u32).unwrap();
+        tmp.set_len((stride * self.height) as u64).unwrap();
+        let mmmap: MmapMut = unsafe { MmapMut::map_mut(&*tmp).unwrap() };
+
+        let surface =
+            cairo::ImageSurface::create_for_data(mmmap, cairo_fmt, self.width, self.height, stride)
+                .unwrap();
+        let cairoinfo = cairo::Context::new(&surface).unwrap();
+        self.context = Some(cairoinfo);
+        self.repaint(key_type);
+    }
+
+    pub(crate) fn repaint(&self, key_type: KeyModifierType) {
         let height = self.height;
         let width = self.width;
-        let surface = cairo::ImageSurface::create(cairo::Format::ARgb32, width, height).unwrap();
-        let cr = cairo::Context::new(&surface).unwrap();
+
+        let cr = self.context.as_ref().unwrap();
+        cr.set_operator(cairo::Operator::Source);
         cr.set_source_rgba(0.4_f64, 0.4_f64, 0.4_f64, 0.4);
         cr.paint().unwrap();
         cr.set_source_rgb(1_f64, 1_f64, 1_f64);
@@ -61,14 +77,6 @@ impl PangoUi {
         draw_number_keyboard(&cr, &pangolayout, width, height, 27, key_type);
         draw_main_keyboard(&cr, &pangolayout, height, 27, key_type);
         draw_title(&cr, &pangolayout, width);
-
-        use std::io::Cursor;
-        let mut buff = Cursor::new(Vec::new());
-
-        surface.write_to_png(&mut buff).unwrap();
-        image::load_from_memory_with_format(buff.get_ref(), image::ImageFormat::Png)
-            .unwrap()
-            .to_rgba8()
     }
 
     pub fn set_size(&mut self, (width, height): (i32, i32)) {
