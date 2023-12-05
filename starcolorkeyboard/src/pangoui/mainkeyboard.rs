@@ -190,13 +190,14 @@ pub fn find_keycode_from_mainkeyboard((pos_x, pos_y): (i32, i32), step: i32) -> 
     if aby >= main_layout.len() as i32 {
         return None;
     }
-    for map in main_layout[aby as usize].iter() {
-        let MainLayout {
-            width,
-            start_pos,
-            key,
-            ..
-        } = map;
+
+    for MainLayout {
+        width,
+        start_pos,
+        key,
+        ..
+    } in main_layout[aby as usize].iter()
+    {
         if pos_x > *start_pos as i32 * step / 2
             && pos_x < (*start_pos as i32 + *width as i32) * step / 2
         {
