@@ -445,10 +445,14 @@ impl State {
         keyboard_ui.update_map(qh);
     }
 
-    fn init_draw(&mut self, key_type: KeyModifierType, pangoui: &mut pangoui::PangoUi, tmp: &mut File) {
+    fn init_draw(
+        &mut self,
+        key_type: KeyModifierType,
+        pangoui: &mut pangoui::PangoUi,
+        tmp: &mut File,
+    ) {
         pangoui.init_draw(key_type, tmp)
     }
-
 
     fn get_key_point(&self) -> Option<u32> {
         self.keyboard_ui[self.current_display as usize].get_key_point()
