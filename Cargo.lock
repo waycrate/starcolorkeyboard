@@ -604,7 +604,7 @@ checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
 
 [[package]]
 name = "starcolorkeyboard"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bitflags 2.4.1",
  "cairo-rs",
