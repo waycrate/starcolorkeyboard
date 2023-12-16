@@ -94,6 +94,10 @@ fn main() {
     let mut virtuan_keyboard = None;
     let mut button_pos: (f64, f64) = (0., 0.);
     let mut is_min = false;
+
+    let mut touch_id = -1;
+    let mut touch_key = 0;
+
     ev.running(|event, ev, index| match event {
         LayerEvent::InitRequest => ReturnData::RequestBind,
         LayerEvent::BindProvide(globals, qh) => {
@@ -194,6 +198,61 @@ fn main() {
                 }
                 None => ReturnData::None,
             }
+        }
+        LayerEvent::RequestMessages(DispatchMessage::TouchDown { x, y, id, .. }) => {
+            if *id != touch_id || touch_id == -1 {
+                touch_id = *id;
+            }
+            let index = index.unwrap();
+            let windowunit = ev.get_unit(index);
+            let pangoui = windowunit.get_binding_mut().unwrap();
+            let Some(touch_getkey) = pangoui.get_key((*x, *y)) else {
+                return ReturnData::None;
+            };
+            touch_key = touch_getkey;
+            match touch_getkey {
+                otherkeys::CLOSE_KEYBOARD => ReturnData::RequestExist,
+                otherkeys::MIN_KEYBOARD => {
+                    if is_min {
+                        windowunit.set_size((0, EXCULDE_ZONE_TOP as u32));
+                        windowunit.set_exclusive_zone(EXCULDE_ZONE_TOP as i32);
+                    } else {
+                        windowunit.set_size((0, 300));
+                        windowunit.set_exclusive_zone(300);
+                    }
+                    is_min = !is_min;
+                    ReturnData::None
+                }
+                key => {
+                    let keystate = KeyState::Pressed;
+
+                    let virtuan_keyboard = virtuan_keyboard.as_ref().unwrap();
+                    virtuan_keyboard.key(100, key, keystate.into());
+                    let keymod: KeyModifierType = key.into();
+                    if keymod != KeyModifierType::NoMod && keystate == KeyState::Pressed {
+                        return ReturnData::None;
+                    }
+                    let keytype_now = current_keytype ^ keymod;
+                    if keytype_now != current_keytype {
+                        current_keytype = keytype_now;
+                        virtuan_keyboard.modifiers(current_keytype.bits(), 0, 0, 0);
+                        for unit in ev.get_unit_iter_mut() {
+                            unit.get_binding_mut().unwrap().repaint(current_keytype);
+                            let (width, height) = unit.get_size();
+                            unit.request_refresh((width as i32, height as i32));
+                        }
+                    }
+                    ReturnData::None
+                }
+            }
+        }
+        LayerEvent::RequestMessages(DispatchMessage::TouchUp { id, .. }) => {
+            if *id != touch_id {
+                return ReturnData::None;
+            }
+            let virtuan_keyboard = virtuan_keyboard.as_ref().unwrap();
+            virtuan_keyboard.key(100, touch_key, KeyState::Released.into());
+            ReturnData::None
         }
         LayerEvent::RequestMessages(DispatchMessage::MouseEnter {
             surface_x,
