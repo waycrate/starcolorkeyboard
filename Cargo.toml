@@ -6,23 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-wayland-protocols = { version = "0.31.0", default-features = false, features = [
-	"unstable",
-	"client",
-] }
-#wayland-protocols = { version = "=0.30.0-beta.13", features = ["client", "unstable"] }
-
-
-wayland-protocols-wlr = { version = "0.2.0", default-features = false, features = [
-	"client",
-] }
-
-wayland-protocols-misc = { version = "0.2.0", features = ["client"] }
-
-wayland-client = { version = "0.31.1" }
-
 xkbcommon = "0.6.0"
 
+layershellev = { git = "https://github.com/Decodetalkers/layershelleventloop" }
 
 #calloop = "0.12.1"
 tempfile = "3.8.0"
