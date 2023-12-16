@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 xkbcommon = "0.6.0"
 
-layershellev = { git = "https://github.com/Decodetalkers/layershelleventloop" }
+layershellev = { git = "https://github.com/waycrate/layershelleventloop" }
 
 #calloop = "0.12.1"
 tempfile = "3.8.0"
