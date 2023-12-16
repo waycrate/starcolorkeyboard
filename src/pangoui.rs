@@ -84,10 +84,6 @@ impl PangoUi {
         self.height = height;
     }
 
-    pub fn get_size(&self) -> (i32, i32) {
-        (self.width, self.height)
-    }
-
     pub fn get_key(&self, (pos_x, pos_y): (f64, f64)) -> Option<u32> {
         let (pos_x, pos_y) = (pos_x as i32, pos_y as i32);
         let exclude_zone = EXCULDE_ZONE_TOP as i32;

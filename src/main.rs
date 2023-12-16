@@ -1,5 +1,4 @@
 mod consts;
-mod dispatch;
 mod keyboardlayouts;
 #[allow(unused)]
 mod otherkeys;
@@ -9,30 +8,12 @@ use std::{ffi::CString, fs::File, io::Write, os::fd::AsFd, path::PathBuf};
 use consts::EXCULDE_ZONE_TOP;
 use keyboardlayouts::Layouts;
 
-use wayland_client::{
-    protocol::{
-        wl_buffer, wl_compositor,
-        wl_keyboard::{self, KeyState},
-        wl_output, wl_seat, wl_shm, wl_surface,
-    },
-    Connection, QueueHandle,
-};
-
-use wayland_protocols_wlr::layer_shell::v1::client::{
-    zwlr_layer_shell_v1::{self, Layer},
-    zwlr_layer_surface_v1::{self, Anchor},
-};
-
-use wayland_protocols::xdg::shell::client::xdg_wm_base;
-
-use wayland_protocols::xdg::xdg_output::zv1::client::{zxdg_output_manager_v1, zxdg_output_v1};
-
-use wayland_protocols_misc::zwp_virtual_keyboard_v1::client::{
-    zwp_virtual_keyboard_manager_v1, zwp_virtual_keyboard_v1,
-};
-
+use layershellev::reexport::wayland_client::KeyState;
 use xkbcommon::xkb;
 
+use layershellev::reexport::wayland_client::{wl_keyboard::KeymapFormat, ButtonState, WEnum};
+use layershellev::reexport::*;
+use layershellev::*;
 use pangoui::PangoUi;
 
 use bitflags::bitflags;
@@ -100,365 +81,137 @@ pub fn get_keymap_as_file() -> (File, u32) {
 }
 
 fn main() {
-    let conn = Connection::connect_to_env().unwrap();
+    let mut ev: WindowState<PangoUi> = WindowState::new("precure")
+        .with_single(false)
+        .with_size((0, 300))
+        .with_layer(Layer::Top)
+        .with_anchor(Anchor::Bottom | Anchor::Left | Anchor::Right)
+        .with_keyboard_interacivity(KeyboardInteractivity::None)
+        .with_exclusize_zone(300);
 
-    let mut event_queue = conn.new_event_queue();
-    let qhandle = event_queue.handle();
-
-    let display = conn.display();
-    display.get_registry(&qhandle, ());
-
-    let mut state = State::init();
-
-    event_queue.blocking_dispatch(&mut state).unwrap();
-    let mut displays: usize = 0;
-    while displays < state.wl_output.len() + 1 {
-        event_queue.blocking_dispatch(&mut state).unwrap();
-        displays = state.wl_output.len() + 1;
-    }
-    for index in 0..state.wl_output.len() {
-        let zxdg_output = state.xdg_output_manager.as_ref().unwrap().get_xdg_output(
-            &state.wl_output[index],
-            &qhandle,
-            (),
-        );
-        state.zxdg_output.push(zxdg_output);
-    }
-    event_queue.blocking_dispatch(&mut state).unwrap();
-
-    // TODO: make it to option config
-    let usemutiscreen = consts::USE_MUTISCREEN;
-
-    if state.layer_shell.is_some() && state.wm_base.is_some() {
-        state.init_virtual_keyboard(&qhandle);
-        if usemutiscreen {
-            for index in 0..state.wl_output.len() {
-                let mut pangoui = pangoui::PangoUi::default();
-                pangoui.set_size(state.get_size_from_display(index));
-                //state.pangoui.set_size(state.get_size_from_display(0));
-                let buffer = state.init_buffer(
-                    &qhandle,
-                    KeyModifierType::NoMod,
-                    &mut pangoui,
-                    state.get_size_from_display(index),
-                );
-                let name = format!("precure_{index}");
-                let (base_surface, layer_surface) = state.init_layer_surface(
-                    name,
-                    &qhandle,
-                    state.get_size_from_display(index),
-                    Some(&state.wl_output[index].clone()),
-                );
-                state.keyboard_ui.push(KeyboardSurface {
-                    base_surface,
-                    layer_surface,
-                    pangoui,
-                    buffer,
-                    position: (0.0, 0.0),
-                    touch_pos: (0.0, 0.0),
-                    is_min: false,
-                })
-            }
-        } else {
-            let index = 0;
+    let mut current_keytype = KeyModifierType::NoMod;
+    let mut virtual_keyboard_manager = None;
+    let mut virtuan_keyboard = None;
+    let mut button_pos: (f64, f64) = (0., 0.);
+    let mut is_min = false;
+    ev.running(|event, ev, index| match event {
+        LayerEvent::InitRequest => ReturnData::RequestBind,
+        LayerEvent::BindProvide(globals, qh) => {
+            virtual_keyboard_manager = Some(
+                globals
+                    .bind::<zwp_virtual_keyboard_v1::ZwpVirtualKeyboardManagerV1, _, _>(
+                        qh,
+                        1..=1,
+                        (),
+                    )
+                    .unwrap(),
+            );
+            let virtual_keyboard_manager = virtual_keyboard_manager.as_ref().unwrap();
+            let seat = ev.get_seat();
+            let virtual_keyboard_in =
+                virtual_keyboard_manager.create_virtual_keyboard(seat, qh, ());
+            let (file, size) = get_keymap_as_file();
+            virtual_keyboard_in.keymap(KeymapFormat::XkbV1.into(), file.as_fd(), size);
+            virtuan_keyboard = Some(virtual_keyboard_in);
+            ReturnData::None
+        }
+        LayerEvent::RequestBuffer(file, shm, qh, init_w, init_h) => {
+            let index = index.unwrap();
             let mut pangoui = pangoui::PangoUi::default();
-            pangoui.set_size(state.get_size_from_display(index));
-            //state.pangoui.set_size(state.get_size_from_display(0));
-            let buffer = state.init_buffer(
-                &qhandle,
-                KeyModifierType::NoMod,
-                &mut pangoui,
-                state.get_size_from_display(index),
-            );
-            let name = format!("precure_{index}");
-            let (base_surface, layer_surface) = state.init_layer_surface(
-                name,
-                &qhandle,
-                state.get_size_from_display(index),
-                Some(&state.wl_output[index].clone()),
-            );
-            state.keyboard_ui.push(KeyboardSurface {
-                base_surface,
-                layer_surface,
-                pangoui,
-                buffer,
-                position: (0.0, 0.0),
-                touch_pos: (0.0, 0.0),
-                is_min: false,
-            })
+            pangoui.set_size((init_w as i32, init_h as i32));
+            pangoui.init_draw(current_keytype, file);
+            let windowunit = ev.get_unit(index);
+            windowunit.set_binding(pangoui);
+            let pool = shm.create_pool(file.as_fd(), (init_w * init_h * 4) as i32, qh, ());
+            ReturnData::WlBuffer(pool.create_buffer(
+                0,
+                init_w as i32,
+                init_h as i32,
+                (init_w * 4) as i32,
+                wl_shm::Format::Argb8888,
+                qh,
+                (),
+            ))
         }
-    }
-
-    while state.running {
-        event_queue.blocking_dispatch(&mut state).unwrap();
-    }
-}
-
-#[derive(Debug)]
-struct KeyboardSurface {
-    base_surface: wl_surface::WlSurface,
-    layer_surface: zwlr_layer_surface_v1::ZwlrLayerSurfaceV1,
-    pangoui: PangoUi,
-    buffer: wl_buffer::WlBuffer,
-    position: (f64, f64),
-    touch_pos: (f64, f64),
-    is_min: bool,
-}
-
-impl KeyboardSurface {
-    fn set_min(&mut self) {
-        self.is_min = !self.is_min
-    }
-
-    fn set_touch_pos(&mut self, (x, y): (f64, f64)) {
-        self.touch_pos = (x, y)
-    }
-
-    fn set_point_pos(&mut self, (x, y): (f64, f64)) {
-        self.position = (x, y)
-    }
-
-    fn redraw(&self, key_type: KeyModifierType) {
-        self.pangoui.repaint(key_type);
-    }
-
-    fn set_size(&mut self, (width, height): (i32, i32)) {
-        self.pangoui.set_size((width, height));
-    }
-
-    fn get_size(&self) -> (i32, i32) {
-        self.pangoui.get_size()
-    }
-
-    fn surface_refresh(&self) {
-        self.base_surface.attach(Some(&self.buffer), 0, 0);
-        self.base_surface.commit();
-    }
-
-    fn get_key_point(&self) -> Option<u32> {
-        self.pangoui.get_key(self.position)
-    }
-
-    fn get_key_touch(&self) -> Option<u32> {
-        self.pangoui.get_key(self.touch_pos)
-    }
-
-    fn min_keyboard(&self) {
-        let layer_surf = &self.layer_surface;
-        if self.is_min {
-            layer_surf.set_size(0, EXCULDE_ZONE_TOP as u32);
-            layer_surf.set_exclusive_zone(EXCULDE_ZONE_TOP as i32);
-        } else {
-            let (_, height) = self.pangoui.get_size();
-            layer_surf.set_size(0, height as u32);
-            layer_surf.set_exclusive_zone(height);
+        LayerEvent::RequestMessages(DispatchMessage::RefreshSurface { width, height }) => {
+            let index = index.unwrap();
+            let windowunit = ev.get_unit(index);
+            let pangoui = windowunit.get_binding_mut().unwrap();
+            pangoui.set_size((*width as i32, *height as i32));
+            pangoui.repaint(current_keytype);
+            windowunit.request_refresh((*width as i32, *height as i32));
+            ReturnData::None
         }
+        LayerEvent::RequestMessages(DispatchMessage::MouseButton { state, .. }) => {
+            let index = index.unwrap();
+            let windowunit = ev.get_unit(index);
+            let pangoui = windowunit.get_binding_mut().unwrap();
+            match pangoui.get_key(button_pos) {
+                Some(otherkeys::CLOSE_KEYBOARD) => {
+                    if let WEnum::Value(ButtonState::Pressed) = *state {
+                        return ReturnData::None;
+                    }
+                    ReturnData::RequestExist
+                }
+                Some(otherkeys::MIN_KEYBOARD) => {
+                    if let WEnum::Value(ButtonState::Pressed) = *state {
+                        return ReturnData::None;
+                    }
+                    if is_min {
+                        windowunit.set_size((0, EXCULDE_ZONE_TOP as u32));
+                        windowunit.set_exclusive_zone(EXCULDE_ZONE_TOP as i32);
+                    } else {
+                        windowunit.set_size((0, 300));
+                        windowunit.set_exclusive_zone(300);
+                    }
+                    is_min = !is_min;
+                    ReturnData::None
+                }
+                Some(key) => {
+                    let keystate = match state {
+                        WEnum::Value(ButtonState::Pressed) => KeyState::Pressed,
+                        WEnum::Value(ButtonState::Released) => KeyState::Released,
+                        _ => unreachable!(),
+                    };
 
-        self.base_surface.commit();
-    }
-
-    fn update_map(&mut self, qh: &QueueHandle<State>) {
-        let (width, height) = self.get_size();
-        self.base_surface.damage_buffer(0, 0, width, height);
-        self.base_surface.frame(qh, ());
-        self.base_surface.attach(Some(&self.buffer), 0, 0);
-        self.base_surface.commit();
-    }
-
-    fn is_same_surface(&self, surface: &zwlr_layer_surface_v1::ZwlrLayerSurfaceV1) -> bool {
-        surface == &self.layer_surface
-    }
-
-    fn is_same_basesurface(&self, surface: &wl_surface::WlSurface) -> bool {
-        surface == &self.base_surface
-    }
-}
-
-#[derive(Debug)]
-struct State {
-    // running state
-    running: bool,
-
-    // to init zxdg_output
-    wl_output: Vec<wl_output::WlOutput>,
-
-    // base shell
-    wl_shm: Option<wl_shm::WlShm>,
-    wl_seat: Option<wl_seat::WlSeat>,
-    wl_composer: Option<wl_compositor::WlCompositor>,
-    layer_shell: Option<zwlr_layer_shell_v1::ZwlrLayerShellV1>,
-
-    // keyboard ui
-    keyboard_ui: Vec<KeyboardSurface>,
-    current_display: i32,
-    touch_current_display: usize,
-
-    // size and output
-    zxdg_output: Vec<zxdg_output_v1::ZxdgOutputV1>,
-    zwl_size: Vec<(i32, i32)>,
-    xdg_output_manager: Option<zxdg_output_manager_v1::ZxdgOutputManagerV1>,
-    wm_base: Option<xdg_wm_base::XdgWmBase>,
-
-    // keyboard
-    virtual_keyboard_manager: Option<zwp_virtual_keyboard_manager_v1::ZwpVirtualKeyboardManagerV1>,
-    virtual_keyboard: Option<zwp_virtual_keyboard_v1::ZwpVirtualKeyboardV1>,
-    keymode: KeyModifierType,
-}
-
-impl State {
-    fn init() -> Self {
-        State {
-            running: true,
-            wl_output: vec![],
-            zwl_size: vec![],
-            wl_shm: None,
-            wl_seat: None,
-            wl_composer: None,
-            layer_shell: None,
-            keyboard_ui: Vec::new(),
-            current_display: -1,
-            touch_current_display: 0,
-            wm_base: None,
-            xdg_output_manager: None,
-            zxdg_output: vec![],
-            virtual_keyboard_manager: None,
-            virtual_keyboard: None,
-            keymode: KeyModifierType::NoMod,
+                    let virtuan_keyboard = virtuan_keyboard.as_ref().unwrap();
+                    virtuan_keyboard.key(100, key, keystate.into());
+                    let keymod: KeyModifierType = key.into();
+                    if keymod != KeyModifierType::NoMod && keystate == KeyState::Pressed {
+                        return ReturnData::None;
+                    }
+                    let keytype_now = current_keytype ^ keymod;
+                    if keytype_now != current_keytype {
+                        current_keytype = keytype_now;
+                        virtuan_keyboard.modifiers(current_keytype.bits(), 0, 0, 0);
+                        for unit in ev.get_unit_iter_mut() {
+                            unit.get_binding_mut().unwrap().repaint(current_keytype);
+                            let (width, height) = unit.get_size();
+                            unit.request_refresh((width as i32, height as i32));
+                        }
+                    }
+                    ReturnData::None
+                }
+                None => ReturnData::None,
+            }
         }
-    }
-    fn init_buffer(
-        &mut self,
-        qh: &QueueHandle<Self>,
-        key_type: KeyModifierType,
-        pangoui: &mut PangoUi,
-        (width, height): (i32, i32),
-    ) -> wl_buffer::WlBuffer {
-        let mut file = tempfile::tempfile().unwrap();
-        self.init_draw(key_type, pangoui, &mut file);
-        let shm = self.wl_shm.as_ref().unwrap();
-        let pool = shm.create_pool(file.as_fd(), width * height * 4, qh, ());
-        pool.create_buffer(
-            0,
-            width,
-            height,
-            width * 4,
-            wl_shm::Format::Argb8888,
-            qh,
-            (),
-        )
-    }
-
-    fn init_layer_surface(
-        &mut self,
-        name: String,
-        qh: &QueueHandle<State>,
-        (_width, height): (i32, i32),
-        output: Option<&wl_output::WlOutput>,
-    ) -> (
-        wl_surface::WlSurface,
-        zwlr_layer_surface_v1::ZwlrLayerSurfaceV1,
-    ) {
-        let surface = self.wl_composer.as_ref().unwrap().create_surface(qh, ());
-        let layer = self.layer_shell.as_ref().unwrap().get_layer_surface(
-            &surface,
-            output,
-            Layer::Overlay,
-            name,
-            qh,
-            (),
-        );
-        layer.set_anchor(Anchor::Bottom | Anchor::Right | Anchor::Left);
-        layer.set_keyboard_interactivity(zwlr_layer_surface_v1::KeyboardInteractivity::None);
-        layer.set_exclusive_zone(height);
-        layer.set_size(0, height as u32);
-
-        surface.commit();
-
-        (surface, layer)
-    }
-
-    fn get_keyboard(
-        &self,
-        surface: &zwlr_layer_surface_v1::ZwlrLayerSurfaceV1,
-    ) -> Option<&KeyboardSurface> {
-        self.keyboard_ui
-            .iter()
-            .find(|ui| ui.is_same_surface(surface))
-    }
-
-    fn get_display_index(&self, surface: &wl_surface::WlSurface) -> Option<usize> {
-        self.keyboard_ui
-            .iter()
-            .position(|ui| ui.is_same_basesurface(surface))
-    }
-
-    fn min_keyboard(&mut self) {
-        if self.current_display >= 0 {
-            self.keyboard_ui[self.current_display as usize].set_min();
-            self.keyboard_ui[self.current_display as usize].min_keyboard();
+        LayerEvent::RequestMessages(DispatchMessage::MouseEnter {
+            surface_x,
+            surface_y,
+            ..
+        }) => {
+            button_pos = (*surface_x, *surface_y);
+            ReturnData::None
         }
-    }
-
-    fn min_keyboard_fromtouch(&mut self) {
-        self.keyboard_ui[self.touch_current_display].set_min();
-        self.keyboard_ui[self.touch_current_display].min_keyboard();
-    }
-
-    fn get_size_from_display(&self, index: usize) -> (i32, i32) {
-        (self.zwl_size[index].0, 270)
-    }
-
-    fn init_virtual_keyboard(&mut self, qh: &QueueHandle<Self>) {
-        let virtual_keyboard_manager = self.virtual_keyboard_manager.as_ref().unwrap();
-        let seat = self.wl_seat.as_ref().unwrap();
-        let virtual_keyboard = virtual_keyboard_manager.create_virtual_keyboard(seat, qh, ());
-        let (file, size) = get_keymap_as_file();
-        virtual_keyboard.keymap(wl_keyboard::KeymapFormat::XkbV1.into(), file.as_fd(), size);
-        self.virtual_keyboard = Some(virtual_keyboard);
-    }
-
-    fn key_press(&self, key: u32) {
-        let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
-        //virtual_keyboard.modifiers(1, 0, 0, 0);
-        virtual_keyboard.key(100, key, KeyState::Pressed.into());
-    }
-
-    #[must_use]
-    fn key_release(&mut self, key: u32) -> bool {
-        let virtual_keyboard = self.virtual_keyboard.as_ref().unwrap();
-        virtual_keyboard.key(100, key, KeyState::Released.into());
-        let mod_pre = self.keymode;
-        let keymod: KeyModifierType = key.into();
-        self.keymode ^= keymod;
-        if self.keymode == mod_pre {
-            false
-        } else {
-            virtual_keyboard.modifiers(self.keymode.bits(), 0, 0, 0);
-            true
+        LayerEvent::RequestMessages(DispatchMessage::MouseMotion {
+            surface_x,
+            surface_y,
+            ..
+        }) => {
+            button_pos = (*surface_x, *surface_y);
+            ReturnData::None
         }
-    }
-
-    fn update_map(&mut self, qh: &QueueHandle<Self>, index: usize) {
-        let key_type = self.keymode;
-        let keyboard_ui = &mut self.keyboard_ui[index];
-        keyboard_ui.redraw(key_type);
-        keyboard_ui.update_map(qh);
-    }
-
-    fn init_draw(
-        &mut self,
-        key_type: KeyModifierType,
-        pangoui: &mut pangoui::PangoUi,
-        tmp: &mut File,
-    ) {
-        pangoui.init_draw(key_type, tmp)
-    }
-
-    fn get_key_point(&self) -> Option<u32> {
-        self.keyboard_ui[self.current_display as usize].get_key_point()
-    }
-
-    fn get_key_touch(&self, index: usize) -> Option<u32> {
-        self.keyboard_ui[index].get_key_touch()
-    }
+        _ => ReturnData::None,
+    })
+    .unwrap();
 }
