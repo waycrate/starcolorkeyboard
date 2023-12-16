@@ -291,7 +291,7 @@ checksum = "b1a46d1a171d865aa5f83f92695765caa047a9b4cbae2cbf37dbd613a793fd4c"
 [[package]]
 name = "layershellev"
 version = "0.1.0"
-source = "git+https://github.com/waycrate/layershelleventloop#ca19e37674e756281904b4113c91e4c063a059bc"
+source = "git+https://github.com/waycrate/layershelleventloop#54aaa907920ad8c8b61cfc45f2a4eae83233d0eb"
 dependencies = [
  "tempfile",
  "thiserror",
